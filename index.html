@@ -1,0 +1,772 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Simulador de Casos RAMS (Copy)</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Concepto: consola de entrenamiento. Franja de estado fija (reloj, barreras, registro) sobre una columna de lectura.
+   Color: azul ML1 como mando, amarillo como señal de atención, rojo solo para riesgo. */
+:root{
+  --bg:#eef2f8; --surface:#ffffff; --surface-2:#f5f7fb; --ink:#16202c; --ink-soft:#566273; --line:#d3dbe7;
+  --brand:#004090; --brand-strong:#00306c; --brand-soft:#e3ebf7; --signal:#f0d010; --signal-soft:#fff6cc; --signal-ink:#5c4a00;
+  --ok:#1d7446; --ok-soft:#e2f3e9; --warn:#8a5a00; --warn-soft:#fdf0d3; --risk:#c01020; --risk-soft:#fbe5e7;
+  --on-brand:#ffffff;
+  --f-display:"Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:Inter,"Segoe UI",Roboto,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1520; --surface:#16202d; --surface-2:#1c2838; --ink:#e7edf5; --ink-soft:#9fadbf; --line:#2c3a4d;
+    --brand:#6fa3ec; --brand-strong:#9cc0f3; --brand-soft:#1b2e4a; --signal:#f0d010; --signal-soft:#3a3212; --signal-ink:#f5e27a;
+    --ok:#5cc98d; --ok-soft:#143323; --warn:#e8b34f; --warn-soft:#3a2c10; --risk:#f07480; --risk-soft:#3d171c;
+    --on-brand:#0e1520; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1520; --surface:#16202d; --surface-2:#1c2838; --ink:#e7edf5; --ink-soft:#9fadbf; --line:#2c3a4d;
+  --brand:#6fa3ec; --brand-strong:#9cc0f3; --brand-soft:#1b2e4a; --signal:#f0d010; --signal-soft:#3a3212; --signal-ink:#f5e27a;
+  --ok:#5cc98d; --ok-soft:#143323; --warn:#e8b34f; --warn-soft:#3a2c10; --risk:#f07480; --risk-soft:#3d171c;
+  --on-brand:#0e1520; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;margin:0}
+.wrap{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+header.top{background:var(--surface);border-bottom:4px solid var(--signal)}
+header.top .wrap{display:flex;align-items:center;gap:14px;padding-block:12px}
+header.top img{height:40px;width:auto;background:#fff;border-radius:6px;padding:3px 6px}
+.brandname{font-family:var(--f-display);font-weight:700;font-size:22px;color:var(--brand);line-height:1.1}
+.brandsub{font-size:13px;color:var(--ink-soft)}
+h1,h2,h3{font-family:var(--f-display);color:var(--brand);text-wrap:balance;margin:0}
+h1{font-size:30px;line-height:1.15}
+h2{font-size:23px;line-height:1.2}
+h3{font-size:18px}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+.muted{color:var(--ink-soft);font-size:14px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+label.f{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+input[type=text],input[type=time],select,textarea{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+textarea{min-height:96px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid var(--signal);outline-offset:2px}
+.btn{font:inherit;font-weight:700;border:none;border-radius:10px;padding:12px 18px;cursor:pointer;background:var(--brand);color:var(--on-brand)}
+.btn:hover{background:var(--brand-strong)}
+.btn.ghost{background:var(--brand-soft);color:var(--brand)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.choice{font:inherit;color:inherit;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.choice:hover{border-color:var(--brand)}
+.choice.sel{border-color:var(--brand);background:var(--brand-soft)}
+.choice .t{font-family:var(--f-display);font-weight:700;font-size:19px;color:var(--brand)}
+.choice .d{font-size:14px;color:var(--ink-soft)}
+.caselist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.case{font:inherit;color:inherit;text-align:left;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--brand);border-radius:10px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.case:hover{border-color:var(--brand)}
+.case .ref{font-size:12px;color:var(--ink-soft)}
+.case .tag{align-self:flex-start}
+.tag{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px;background:var(--brand-soft);color:var(--brand)}
+.tag.best{background:var(--ok-soft);color:var(--ok)}
+.tag.ok{background:var(--warn-soft);color:var(--warn)}
+.tag.bad{background:var(--risk-soft);color:var(--risk)}
+details.other summary{cursor:pointer;font-weight:600;color:var(--brand)}
+/* franja de estado */
+.status{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px}
+.meters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.meter{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.meter .ml{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.meter .mv{font-family:var(--f-display);font-size:24px;font-weight:700;color:var(--brand);font-variant-numeric:tabular-nums}
+.shields{display:flex;gap:6px;padding-top:6px}
+.shields span{width:20px;height:22px;border-radius:4px 4px 10px 10px;background:var(--ok)}
+.shields span.off{background:var(--line)}
+.clock{display:inline-block;font-family:var(--f-display);font-weight:700;font-size:20px;color:var(--on-brand);background:var(--brand);border-radius:6px;padding:2px 10px;font-variant-numeric:tabular-nums}
+.situ{background:var(--surface-2);border-left:5px solid var(--brand);border-radius:8px;padding:12px 14px}
+.alarm{background:var(--risk-soft);border-left:5px solid var(--risk);border-radius:8px;padding:12px 14px;font-weight:600}
+.radio{background:var(--signal-soft);border-left:5px solid var(--signal);border-radius:8px;padding:12px 14px;color:var(--signal-ink);font-weight:600}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{font:inherit;color:var(--ink);text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:10px}
+.opt:hover:not([disabled]){border-color:var(--brand)}
+.opt .k{font-family:var(--f-display);font-weight:700;color:var(--brand)}
+.opt[disabled]{cursor:default}
+.opt.best{border-color:var(--ok);background:var(--ok-soft)}
+.opt.ok{border-color:var(--warn);background:var(--warn-soft)}
+.opt.bad{border-color:var(--risk);background:var(--risk-soft)}
+.opt.dim{opacity:.55}
+.fb{border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.fb.best{background:var(--ok-soft)} .fb.ok{background:var(--warn-soft)} .fb.bad{background:var(--risk-soft)}
+.fb .h{font-weight:700}
+.fb .rams{font-size:14px}
+.fb .ref{font-size:13px;color:var(--ink-soft)}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.formgrid .full{grid-column:1/-1}
+.fixed{padding:10px 12px;border:1px dashed var(--line);border-radius:8px;background:var(--surface-2)}
+.score{font-family:var(--f-display);font-size:56px;font-weight:700;color:var(--brand);line-height:1;font-variant-numeric:tabular-nums}
+.parts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.part{background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.part .pv{font-family:var(--f-display);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+th{color:var(--ink-soft);font-weight:600}
+.lesson{background:var(--signal-soft);color:var(--ink);border-radius:10px;padding:12px 14px}
+footer.note{font-size:12px;color:var(--ink-soft);text-align:center;padding-bottom:24px}
+@media (max-width:640px){.grid3,.caselist,.meters,.parts,.formgrid{grid-template-columns:1fr}.meters{grid-template-columns:repeat(3,minmax(0,1fr))}.meter .mv{font-size:19px}h1{font-size:25px}}
+@media (prefers-reduced-motion:no-preference){.opt,.choice,.case{transition:border-color .15s,background-color .15s}}
+</style>
+
+<header class="top"><div class="wrap">
+  <img id="logo" alt="Metro Línea 1">
+  <div><div class="brandname">Simulador de casos RAMS</div><div class="brandsub">Curso "Metro seguro y disponible: tu papel en RAMS" · Personal operativo L1MB</div></div>
+</div></header>
+<main class="wrap" id="app"></main>
+<footer class="note wrap">Uso interno de ML1. Casos basados en la Norma de Operaciones L1MB (L1T1-0000-000-CON-CN-OYM-MA-0004) y sus anexos. Siempre prima el procedimiento vigente.</footer>
+
+<script>
+"use strict";
+var LOGO = "data:image/png;base64,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";
+document.getElementById("logo").src = LOGO;
+
+/* ============================================================
+   CONTENIDO DE LOS CASOS
+   Cada caso: rol, título, contexto, minutos base, pasos (decisiones) y reporte esperado.
+   Cada opción: t (texto), q ("best" | "ok" | "bad"), min (minutos que suma), barrera (true si quita una barrera),
+   fb (por qué), rams (idea RAMS), ref (referencia).
+   ============================================================ */
+var FECHA_CASO = "2027/03/09";
+var REG = "Norma de Operaciones L1MB";
+
+var ROLES = {
+  cco: {nombre:"Controlador CCO", desc:"Controlador de Circulación Línea (OCIR-L) en el Centro de Control de Operaciones."},
+  cot: {nombre:"Conductor a bordo", desc:"Conductor a bordo (COT): atiende fallas, conduce en modo manual con autorización del CCO y asiste a los pasajeros."},
+  aux: {nombre:"Auxiliar de estación", desc:"Auxiliar de estación (AUX): atiende la plataforma, las PDAP y a los pasajeros bajo la coordinación del JET y el CCO."}
+};
+
+var CATEGORIAS = ["Orden de control","Incidente – alarma de fallo","Incidente – alarma de incendio","Labor diaria","Novedad operativa","Otros"];
+var RECEPTORES = ["CCO","Jefe de Estación de Turno (JET)","Capitán de Trenes (CAP)","Controlador de Mantenimiento (OMAN)","Estación (personal de plataforma)"];
+var CANALES = ["Radio TETRA","Teléfono","Presencial","Mensaje de texto"];
+
+var CASOS = [
+ {id:"cco-puerta", rol:"cco", titulo:"Puerta del tren que no cierra en estación",
+  resumen:"Hora punta. Una puerta del Tren 105 no cierra en la Estación E08 y el tren no puede salir.",
+  ref:REG+", §5.2.5 y §5.3.1",
+  contexto:"Hora punta de la mañana. Usted es el OCIR-L de turno. El Tren uno-cero-cinco (105) circula en UTO con un conductor a bordo (COT).",
+  minBase:1,
+  pasos:[
+   {hora:"07:38", alarma:"ALARMA: la puerta 3 del coche 2 del Tren 105 no cierra en la Estación E08, vía 1.",
+    texto:"¿Qué hace primero?",
+    ops:[
+     {t:"Revisar la cámara CCTV asociada para descartar una persona u objeto atrapado, y aplicar retención manual al tren.", q:"best", min:1,
+      fb:"Primero descarta que haya alguien atrapado y asegura que el tren no salga con una puerta abierta.", rams:"Seguridad primero: entender antes de actuar, sin quitar ninguna protección.", ref:REG+", §5.2.5 y §5.3.1 (una o varias puertas no cierran)."},
+     {t:"Enviar el comando de cierre remoto de puertas sin revisar la cámara.", q:"bad", min:0, barrera:true,
+      fb:"Si hay una persona u objeto atrapado, cerrar a ciegas puede lesionar a alguien. El reglamento prevé confirmar la remoción de la obstrucción antes del cierre remoto.", rams:"Una acción remota sin verificación quita una barrera.", ref:REG+", §5.2.5."},
+     {t:"Autorizar la salida del tren para no afectar el intervalo.", q:"bad", min:0, barrera:true,
+      fb:"Un tren no sale con una puerta abierta. La puntualidad nunca prevalece sobre la seguridad.", rams:"La seguridad operacional prevalece sobre la puntualidad (principio general del reglamento).", ref:REG+", §2.1."}
+    ]},
+   {hora:"07:39", situ:"La cámara muestra que no hay obstrucción: la puerta tiene una falla.",
+    texto:"¿Cómo le da la instrucción al conductor a bordo?",
+    ops:[
+     {t:"\"Control a tren uno-cero-cinco, responda.\" Luego: \"Tren uno-cero-cinco, cierre y aísle manualmente la puerta tres del coche dos, estación cero-ocho, vía uno. Confirme colación.\" Espera la repetición completa y cierra con \"Correcto, tren uno-cero-cinco\".", q:"best", min:1,
+      fb:"Estructura completa, números cifra por cifra, colación obligatoria y cierre con \"Correcto\" más el identificador.", rams:"La comunicación clara es una barrera humana: evita que se actúe sobre la puerta o el tren equivocado.", ref:REG+", §3.1.4 a §3.1.6 y Anexo 01."},
+     {t:"\"Ciento cinco, cierre la puerta dañada, ¿me copia?\" y acepta \"OK\" como respuesta.", q:"bad", min:0, barrera:true,
+      fb:"Está prohibido cerrar con \"OK\", \"recibido\" o \"copiado\" sin colación, y los números se dicen cifra por cifra. Además, la orden no dice qué puerta ni en qué coche.", rams:"Una orden ambigua es una barrera rota.", ref:REG+", §3.1.4 y §3.1.7."},
+     {t:"Pedir al Jefe de Estación que cierre la puerta del tren desde el andén.", q:"ok", min:2,
+      fb:"La estación puede apoyar, pero el reglamento asigna esta acción al conductor a bordo, que está en el tren. Se pierde tiempo coordinando.", rams:"Cada barrera tiene un responsable definido.", ref:REG+", §5.3.1."}
+    ]},
+   {hora:"07:41", radio:"\"Control, aquí tren uno-cero-cinco: puerta tres del coche dos cerrada y aislada.\"",
+    texto:"¿Cuándo cancela la retención?",
+    ops:[
+     {t:"Verificar en la consola que la puerta aparece aislada y entonces cancelar la retención. El tren sigue en UTO con la puerta aislada.", q:"best", min:1,
+      fb:"El reglamento indica cancelar la retención una vez confirmado el estado de aislamiento.", rams:"Doble confirmación: lo que se dice por radio se verifica en el sistema.", ref:REG+", §4.1.3 y §5.3.1."},
+     {t:"Cancelar la retención de inmediato con el reporte verbal.", q:"ok", min:0,
+      fb:"Probablemente esté bien, pero no verificó en el sistema. Si el aislamiento no quedó registrado, el tren puede volver a fallar en la siguiente estación.", rams:"Confirmar en el sistema cuesta segundos.", ref:REG+", §4.1.3."},
+     {t:"Retirar el tren del servicio y evacuar a todos los pasajeros.", q:"ok", min:12,
+      fb:"Es una medida desproporcionada: con la puerta aislada, el reglamento permite que el tren continúe en UTO. Se pierden muchos minutos de servicio.", rams:"Disponibilidad: la respuesta debe ser proporcional al riesgo.", ref:REG+", §5.3.1."}
+    ]},
+   {hora:"07:44", texto:"El tren ya salió. ¿Qué hace con la información de la falla?",
+    ops:[
+     {t:"Registrarla en el Registro Diario (fecha y hora, ubicación, emisor, contenido, receptor y canal) e informar al Controlador de Mantenimiento (OMAN) para su reparación.", q:"best", min:0,
+      fb:"La puerta quedó aislada, no reparada: el OCIR-L debe informar al OMAN. Y todo evento se registra a tiempo.", rams:"El registro alimenta el FRACAS: sin él, la falla no se analiza ni se corrige.", ref:REG+", §2.3.1 y §11."},
+     {t:"No registrarla, porque el tren siguió en servicio.", q:"bad", min:0,
+      fb:"Una falla resuelta en el momento sigue siendo una falla. Si no queda registrada, nadie la repara y puede repetirse.", rams:"Si no está registrado, no existe para el análisis.", ref:REG+", §11."},
+     {t:"Registrarla al final del turno con lo que recuerde.", q:"bad", min:0,
+      fb:"El reglamento prohíbe reportar tarde u omitir información. Al final del turno se pierden detalles como la hora exacta.", rams:"Un reporte tardío es un reporte incorrecto.", ref:REG+", §11."}
+    ]}
+  ],
+  reporte:{titulo:"Registro de la falla en el Registro Diario", emisor:"OCIR-L (Controlador de Circulación Línea)", hora:"07:38",
+   ubicaciones:["Estación E07 – vía 1","Estación E08 – vía 1","Estación E08 – vía 2","Entre E08 y E09 – vía 1"], ubicacion:"Estación E08 – vía 1",
+   categorias:["Incidente – alarma de fallo"], receptores:["Controlador de Mantenimiento (OMAN)"], canales:["Radio TETRA","Teléfono"],
+   claves:["puerta","105","coche","aisl","retenc"], },
+  leccion:"Ante una puerta que no cierra: primero descartar a una persona atrapada, luego una orden clara con colación, verificar el aislamiento en el sistema y pasar la falla a mantenimiento. Así la perturbación se queda en pocos minutos y nadie corre riesgo."
+ },
+
+ {id:"cco-pei", rol:"cco", titulo:"Interfono de emergencia activado en un tren",
+  resumen:"Un pasajero activa el interfono de emergencia del Tren 112 entre las estaciones E05 y E06.",
+  ref:REG+", §5.4.1",
+  contexto:"Hora punta de la tarde. Usted es el OCIR-L de turno. El Tren uno-uno-dos (112) circula en UTO por el viaducto.",
+  minBase:0,
+  pasos:[
+   {hora:"18:12", alarma:"ALARMA CRÍTICA: interfono de emergencia (PEI) activado en el coche 4 del Tren 112, entre E05 y E06, vía 2. El sistema muestra la cámara del coche.",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Atender la llamada del interfono de inmediato (máximo 60 segundos) mientras observa la cámara del coche.", q:"best", min:0,
+      fb:"El reglamento fija un máximo de 60 segundos para atender el interfono. La cámara le da contexto mientras habla.", rams:"El tiempo de respuesta es parte de la barrera.", ref:REG+", §5.4.1."},
+     {t:"Terminar la tarea que estaba haciendo y luego atender la llamada.", q:"bad", min:2, barrera:true,
+      fb:"Un interfono de emergencia puede ser una persona en riesgo. Superar los 60 segundos incumple el reglamento.", rams:"Prioridad 1 y 2 antes que la rutina.", ref:REG+", §5.4.1 y Anexo 01."},
+     {t:"Detener toda la línea con el botón RCE de línea principal.", q:"bad", min:15,
+      fb:"Es desproporcionado: corta la tracción de toda la línea y deja trenes detenidos en el viaducto, que es una zona de difícil acceso.", rams:"La respuesta debe ser proporcional; el RCE es para riesgo inminente.", ref:REG+", §5.4.4 y §9.2.3."}
+    ]},
+   {hora:"18:13", radio:"Pasajera por el interfono: \"Un señor se desmayó en el coche cuatro.\"",
+    texto:"¿Qué hace con el tren?",
+    ops:[
+     {t:"Dejar que el tren continúe en UTO hasta la siguiente estación (E06), donde quedará retenido con puertas y PDAP abiertas para la atención.", q:"best", min:3,
+      fb:"Correcto: en interestación el tren no se detiene en el viaducto; sigue hasta la siguiente estación, donde la ayuda puede llegar.", rams:"El lugar seguro para atender a alguien es la estación, no el viaducto.", ref:REG+", §5.4.1."},
+     {t:"Detener el tren en el viaducto para que la ayuda llegue más rápido.", q:"bad", min:8, barrera:true,
+      fb:"En el viaducto la ayuda llega más lento, no más rápido, y se crea un riesgo de evacuación no autorizada.", rams:"Detener donde no hay acceso aumenta el peligro.", ref:REG+", §5.4.1."},
+     {t:"Ordenar que el tren salte E06 y siga hasta la terminal, donde hay más personal.", q:"bad", min:6,
+      fb:"Se retrasa la atención de una persona inconsciente varios minutos sin razón.", rams:"La vida está primero que la comodidad operativa.", ref:REG+", §9.2.2."}
+    ]},
+   {hora:"18:14", texto:"El tren va hacia E06. ¿Cómo coordina con la estación?",
+    ops:[
+     {t:"\"Control a estación cero-seis, responda.\" Le informa que el Tren uno-uno-dos llega a vía dos con una persona indispuesta en el coche cuatro, que se prepare para atenderla en la plataforma, y pide colación.", q:"best", min:0,
+      fb:"La estación se prepara antes de que llegue el tren y sabe exactamente dónde actuar.", rams:"Anticiparse acorta el tiempo de atención.", ref:REG+", §5.4.1 y Anexo 01."},
+     {t:"Avisar a la estación cuando el tren ya esté en el andén.", q:"ok", min:3,
+      fb:"La estación pierde minutos organizándose cuando el tren ya llegó.", rams:"Disponibilidad: lo que no se prepara se paga en minutos.", ref:REG+", §5.4.1."},
+     {t:"Anunciar por megafonía en toda la línea que hay una emergencia médica.", q:"ok", min:1,
+      fb:"Genera alarma innecesaria en toda la línea y no le dice a la estación qué hacer.", rams:"La información debe ir a quien la necesita.", ref:REG+", Anexo 02."}
+    ]},
+   {hora:"18:22", situ:"El personal de estación atendió al pasajero y ya salió del tren con los servicios de emergencia.",
+    texto:"¿Cómo cierra el evento?",
+    ops:[
+     {t:"Confirmar con la estación que la atención terminó, rearmar el interfono, liberar la retención y registrar el evento en el Registro Diario.", q:"best", min:1,
+      fb:"El interfono vuelve a estar disponible para la siguiente emergencia y el evento queda trazado.", rams:"Restablecer la barrera y registrar cierra el ciclo.", ref:REG+", §5.4.1 y §11."},
+     {t:"Liberar el tren apenas baje el pasajero, sin rearmar el interfono.", q:"bad", min:0, barrera:true,
+      fb:"El interfono queda fuera de servicio: si otra persona lo necesita, no funcionará.", rams:"Un dispositivo de emergencia sin restablecer es una barrera perdida.", ref:REG+", §5.4.1."},
+     {t:"Rearmar y liberar, pero no registrarlo porque no fue una falla técnica.", q:"bad", min:0,
+      fb:"Los eventos con pasajeros también se registran. Está prohibido omitir información.", rams:"Lo que no se registra no se aprende.", ref:REG+", §11."}
+    ]}
+  ],
+  reporte:{titulo:"Registro del evento en el Registro Diario", emisor:"OCIR-L (Controlador de Circulación Línea)", hora:"18:12",
+   ubicaciones:["Estación E05 – vía 2","Entre E05 y E06 – vía 2","Estación E06 – vía 2","Entre E05 y E06 – vía 1"], ubicacion:"Entre E05 y E06 – vía 2",
+   categorias:["Novedad operativa"], receptores:["Estación (personal de plataforma)","Jefe de Estación de Turno (JET)"], canales:["Radio TETRA"],
+   claves:["interfono","112","coche","desmay","indispuest","pasajer"]},
+  leccion:"Un interfono de emergencia se atiende en menos de 60 segundos. En el viaducto, el tren sigue hasta la estación; la estación se prepara antes de que llegue; y al final se restablece el dispositivo y se registra."
+ },
+
+ {id:"cot-estado-puerta", rol:"cot", titulo:"Pérdida de estado de una puerta del tren",
+  resumen:"El Tren 105 frena de emergencia entre E03 y E04 porque perdió el estado de una puerta.",
+  ref:REG+", §4.2 y §5.3.1",
+  contexto:"Hora punta de la mañana. Usted es el conductor a bordo (COT) del Tren uno-cero-cinco (105), que circula en UTO con pasajeros.",
+  minBase:1,
+  pasos:[
+   {hora:"07:55", alarma:"El tren aplica frenado de emergencia entre E03 y E04, vía 1. La consola indica: pérdida de estado de la puerta 2 del coche 3.",
+    texto:"¿Qué hace primero?",
+    ops:[
+     {t:"Ir a la puerta afectada, mantener a los pasajeros alejados y verificar que no exista riesgo de caída; luego reportar al CCO lo que encuentra.", q:"best", min:2,
+      fb:"El reglamento indica actuar tras verificar que no existe riesgo de caída de pasajeros.", rams:"Primero las personas, después el tren.", ref:REG+", §5.3.1 (pérdida de estado de una puerta)."},
+     {t:"Accionar de una vez el bypass de puertas para que el tren pueda moverse.", q:"bad", min:0, barrera:true,
+      fb:"No sabe si la puerta está abierta. Moverse con un bypass sin verificar puede hacer que alguien caiga del tren.", rams:"Nunca se puentea una protección sin verificar.", ref:REG+", §5.3.1."},
+     {t:"Quedarse en la cabina esperando que el CCO lo resuelva de forma remota.", q:"ok", min:4,
+      fb:"Esta falla requiere que alguien verifique la puerta en sitio, y usted es quien está a bordo.", rams:"La barrera humana a bordo es usted.", ref:REG+", §2.3.3."}
+    ]},
+   {hora:"07:58", situ:"La puerta está cerrada físicamente, pero el sistema no detecta su estado.",
+    texto:"¿Cómo continúa?",
+    ops:[
+     {t:"Reportar al CCO \"puerta cerrada con falla en la detección\" y solicitar autorización para accionar el bypass y conducir en modo MCS o EM hasta la estación más cercana.", q:"best", min:1,
+      fb:"El reglamento prevé el bypass y la conducción manual hasta la estación más cercana, pero cambiar de modo requiere autorización previa del OCIR.", rams:"Degradar el modo es decisión del CCO, no del conductor.", ref:REG+", §4.2.2 y §5.3.1."},
+     {t:"Accionar el bypass y pasar a modo EM por iniciativa propia, porque la puerta está cerrada.", q:"bad", min:0, barrera:true,
+      fb:"El conductor no puede degradar el modo por iniciativa propia, salvo riesgo inminente para la vida. El CCO debe saber que el tren se moverá sin protección.", rams:"La autorización es la barrera que protege a los demás trenes.", ref:REG+", §4.2.2."},
+     {t:"Pedir al CCO que active el RCE de línea para detener todos los trenes mientras revisa.", q:"ok", min:8,
+      fb:"No hay un riesgo inminente que lo justifique; el sistema ya protegió la zona. Se detiene toda la línea sin necesidad.", rams:"Proporcionalidad.", ref:REG+", §9.2.3."}
+    ]},
+   {hora:"08:00", radio:"CCO: \"Tren uno-cero-cinco, accione el bypass de puertas y circule en modo EM hasta estación cero-cuatro, vía uno. Confirme colación.\"",
+    texto:"Después de colacionar, ¿cómo conduce?",
+    ops:[
+     {t:"En modo EM a máximo 25 km/h, bajo supervisión continua del CCO, y entrando a la estación E04 a no más de 25 km/h.", q:"best", min:3,
+      fb:"En modo EM no hay protección ATP: el límite es 25 km/h en línea principal y en la entrada a estación.", rams:"Modo degradado: menos velocidad, más atención.", ref:REG+", §4.1.4 y §4.2."},
+     {t:"A 40 km/h, para recuperar el tiempo perdido.", q:"bad", min:2, barrera:true,
+      fb:"Supera el límite del modo EM. Sin ATP, su velocidad es la única protección.", rams:"La velocidad límite es una barrera.", ref:REG+", §4.1.4."},
+     {t:"A 25 km/h, pero sin comunicarse con el CCO hasta llegar.", q:"bad", min:3, barrera:true,
+      fb:"En modo EM el reglamento exige la supervisión continua del CCO.", rams:"Sin comunicación no hay supervisión.", ref:REG+", §4.2.1."}
+    ]},
+   {hora:"08:05", situ:"El tren se detuvo en la Estación E04, vía 1.",
+    texto:"¿Qué hace ahora?",
+    ops:[
+     {t:"Coordinar con el personal de estación la evacuación de todos los pasajeros, informarles con mensajes claros y reportar la novedad al CCO y al Capitán de Trenes antes de retirar el tren.", q:"best", min:3,
+      fb:"El reglamento indica evacuar y retirar el tren del servicio. El Capitán de Trenes consolida las novedades de conducción.", rams:"Un reporte completo es el inicio del análisis FRACAS.", ref:REG+", §2.3.3 y §5.3.1."},
+     {t:"Seguir con los pasajeros hasta la terminal, porque el tren todavía se mueve.", q:"bad", min:0, barrera:true,
+      fb:"Con la detección de puerta en falla, el tren debe evacuarse y salir de servicio.", rams:"No se presta servicio con una protección anulada.", ref:REG+", §5.3.1."},
+     {t:"Evacuar y retirar el tren sin reportar nada; mantenimiento verá la alarma.", q:"bad", min:3,
+      fb:"La alarma no dice lo que usted vio: si la puerta estaba cerrada, qué hizo y a qué hora. Sin eso, el diagnóstico empieza de cero.", rams:"Mantenibilidad: su reporte acorta la reparación.", ref:REG+", §2.3.3 y §11."}
+    ]}
+  ],
+  reporte:{titulo:"Reporte de la novedad al CCO", emisor:"COT – Tren 105", hora:"07:55",
+   ubicaciones:["Estación E03 – vía 1","Entre E03 y E04 – vía 1","Estación E04 – vía 1","Entre E03 y E04 – vía 2"], ubicacion:"Entre E03 y E04 – vía 1",
+   categorias:["Incidente – alarma de fallo"], receptores:["CCO"], canales:["Radio TETRA"],
+   claves:["puerta","105","coche","bypass","deteccion","detección","evacu"]},
+  leccion:"Con una falla de puerta: verificar que nadie pueda caer, reportar con precisión, cambiar de modo solo con autorización, respetar los 25 km/h del modo EM y evacuar en la estación más cercana."
+ },
+
+ {id:"cot-no-comunicante", rol:"cot", titulo:"Tren no comunicante",
+  resumen:"El Tren 108 pierde la comunicación con el sistema de señalización entre E10 y E11.",
+  ref:REG+", §3.1, §4.2 y §5.3.1",
+  contexto:"Mediodía. Usted es el conductor a bordo (COT) del Tren uno-cero-ocho (108), que circula en UTO con pasajeros.",
+  minBase:1,
+  pasos:[
+   {hora:"13:20", alarma:"El tren aplica frenado de emergencia entre E10 y E11, vía 2. La consola indica pérdida de comunicación con la señalización (tren no comunicante).",
+    texto:"¿Qué hace primero?",
+    ops:[
+     {t:"Llamar al CCO (\"Tren uno-cero-ocho a control, responda\"), reportar la situación y esperar instrucciones.", q:"best", min:1,
+      fb:"Reporta de inmediato con la estructura correcta y no actúa sin la autorización del CCO.", rams:"El CCO es quien ve toda la línea.", ref:REG+", §3.1 y Anexo 01."},
+     {t:"Pasar a modo EM de inmediato, porque el procedimiento dice que el conductor conmuta a EM.", q:"bad", min:0, barrera:true,
+      fb:"El reglamento sí prevé el modo EM para esta falla, pero la degradación de modo requiere autorización previa del OCIR. Sin ella, el CCO no sabe que hay un tren moviéndose sin protección.", rams:"Hacer lo correcto en el orden equivocado también es un riesgo.", ref:REG+", §4.2.2 y §5.3.1."},
+     {t:"Esperar en silencio a que el sistema se recupere.", q:"ok", min:5,
+      fb:"El CCO ya ve la alarma, pero necesita su confirmación desde el tren. Esperar en silencio solo suma minutos.", rams:"El tiempo de reacción es parte de la duración de la falla.", ref:REG+", §2.3.3."}
+    ]},
+   {hora:"13:22", radio:"CCO: \"Tren uno-cero-ocho, conmute a modo EM y circule hasta estación uno-uno, vía dos. Confirme colación.\"",
+    texto:"¿Cómo responde?",
+    ops:[
+     {t:"\"Tren uno-cero-ocho: conmuto a modo EM y circulo hasta estación uno-uno, vía dos.\" Espera el \"Correcto, tren uno-cero-ocho\" antes de moverse.", q:"best", min:1,
+      fb:"Colación completa y cierre del ciclo antes de actuar.", rams:"La colación asegura que usted y el CCO entendieron lo mismo.", ref:REG+", §3.1.4 a §3.1.6."},
+     {t:"\"Recibido, control\", y arranca.", q:"bad", min:0, barrera:true,
+      fb:"\"Recibido\" sin repetir la orden está prohibido, y arrancó sin que el CCO cerrara la comunicación.", rams:"Sin colación no hay confirmación.", ref:REG+", §3.1.4."},
+     {t:"\"Entendido, ciento ocho, voy para la once.\"", q:"bad", min:0,
+      fb:"Expresión informal, números sin decir cifra por cifra y sin el modo de conducción. Así se generan malentendidos.", rams:"La forma de hablar por radio también es una barrera.", ref:REG+", §3.1.7."}
+    ]},
+   {hora:"13:24", texto:"Ya está en modo EM. ¿Cómo conduce hasta E11?",
+    ops:[
+     {t:"A máximo 25 km/h, atento a la vía y a los indicadores de posición de cambiavías, y deteniéndose para pedir confirmación al CCO ante cualquier duda.", q:"best", min:4,
+      fb:"En modo EM no hay ATP: la autorización la da el CCO, que confirma que la ruta está despejada, y la velocidad máxima es 25 km/h.", rams:"Sin protección automática, la barrera es usted.", ref:REG+", §4.1.4, §4.2.1 y §4.3."},
+     {t:"A 50 km/h, porque la vía estaba despejada hace un minuto.", q:"bad", min:2, barrera:true,
+      fb:"Duplica el límite del modo EM. Lo que estaba despejado hace un minuto no tiene por qué estarlo ahora.", rams:"La velocidad límite es una barrera.", ref:REG+", §4.1.4."},
+     {t:"A 25 km/h, pero con el radio en volumen bajo para concentrarse.", q:"bad", min:4, barrera:true,
+      fb:"En modo EM la supervisión del CCO es continua: debe poder escuchar cualquier orden de detención.", rams:"Comunicación permanente con el CCO.", ref:REG+", §2.3.3 y §4.2.1."}
+    ]},
+   {hora:"13:30", situ:"El tren llegó a la Estación E11, vía 2. Mientras se detiene, la consola indica que el tren vuelve a comunicar.",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Evacuar a los pasajeros con apoyo de la estación, informarles con claridad, pedir instrucciones al CCO para retirar el tren y reportar la novedad al Capitán de Trenes.", q:"best", min:4,
+      fb:"El reglamento indica retirar el tren de la línea. Que vuelva a comunicar no significa que la falla esté resuelta.", rams:"Una falla que aparece y desaparece se reporta y se analiza.", ref:REG+", §2.3.3 y §5.3.1."},
+     {t:"Volver a modo UTO por su cuenta, porque el tren ya comunica.", q:"bad", min:0, barrera:true,
+      fb:"Restablecer el modo también requiere autorización previa del OCIR.", rams:"Ni degradar ni restablecer el modo por iniciativa propia.", ref:REG+", §4.2.2."},
+     {t:"Dejar el tren con pasajeros en la estación mientras revisa los equipos.", q:"bad", min:6,
+      fb:"Los pasajeros quedan sin información y el tren ocupa la plataforma. Primero se evacua y se coordina con el CCO.", rams:"Primero las personas.", ref:REG+", §5.3.1."}
+    ]}
+  ],
+  reporte:{titulo:"Reporte de la novedad al CCO", emisor:"COT – Tren 108", hora:"13:20",
+   ubicaciones:["Estación E10 – vía 2","Entre E10 y E11 – vía 2","Estación E11 – vía 2","Entre E10 y E11 – vía 1"], ubicacion:"Entre E10 y E11 – vía 2",
+   categorias:["Incidente – alarma de fallo"], receptores:["CCO"], canales:["Radio TETRA"],
+   claves:["108","comunic","EM","frenado","evacu"]},
+  leccion:"En un tren no comunicante: reportar primero, cambiar de modo solo con autorización, colacionar la orden, conducir a 25 km/h con atención total y no restablecer el modo por cuenta propia aunque el tren vuelva a comunicar."
+ },
+
+ {id:"aux-pdap", rol:"aux", titulo:"Falla de puerta de andén en hora punta",
+  resumen:"Una puerta de andén (PDAP) no abre cuando llega el tren a la Estación E08.",
+  ref:REG+", §6.2.1 y §6.4.3",
+  contexto:"Hora punta de la mañana. Usted es Auxiliar de Estación (AUX) en la Estación E08. El andén de la vía 1 está lleno.",
+  minBase:1,
+  pasos:[
+   {hora:"08:05", alarma:"Llega un tren a la vía 1 y la puerta de andén del módulo 12 no abre. Los pasajeros se agolpan frente a ella.",
+    texto:"¿Qué hace primero?",
+    ops:[
+     {t:"Acudir de inmediato al módulo, asegurar y segregar la zona, e informar al JET.", q:"best", min:0,
+      fb:"Es exactamente lo que asigna el reglamento al AUX ante una falla de PDAP.", rams:"Primero garantizar la operación segura, luego gestionar la reparación.", ref:REG+", §6.4.3 (Tabla de actividades ante falla de PDAP)."},
+     {t:"Llamar a mantenimiento y esperar a que llegue.", q:"ok", min:4,
+      fb:"Mientras espera, la zona queda sin control y los pasajeros siguen agolpados frente a una puerta en falla.", rams:"La atención inicial le corresponde a la estación.", ref:REG+", §6.4.3."},
+     {t:"Intentar abrir la puerta a la fuerza para que los pasajeros pasen.", q:"bad", min:0, barrera:true,
+      fb:"Forzar una PDAP puede dejarla abierta frente a la vía cuando el tren se vaya.", rams:"No se fuerza una barrera física.", ref:REG+", §6.4.3."}
+    ]},
+   {hora:"08:06", texto:"Los pasajeros siguen esperando frente a la puerta dañada. ¿Qué hace?",
+    ops:[
+     {t:"Hacer anuncios y guiar a los pasajeros para subir y bajar por los módulos habilitados.", q:"best", min:0,
+      fb:"Es parte de las actividades del AUX ante una falla de PDAP.", rams:"Gestionar el flujo evita aglomeraciones y retrasos.", ref:REG+", §6.4.3."},
+     {t:"Dejar que los pasajeros se organicen solos.", q:"ok", min:2,
+      fb:"Sin orientación, la gente se acumula y el tren tarda más en salir.", rams:"Disponibilidad: cada segundo de parada suma.", ref:REG+", §6.4.3."},
+     {t:"Pedir a los pasajeros que esperen el siguiente tren frente a esa misma puerta.", q:"ok", min:3,
+      fb:"La puerta seguirá en falla con el siguiente tren. Se crea una aglomeración frente a un módulo inhabilitado.", rams:"Prevenir el riesgo de aglomeración.", ref:REG+", §6.5."}
+    ]},
+   {hora:"08:08", texto:"Mantenimiento tardará en llegar. ¿Qué hace con la puerta?",
+    ops:[
+     {t:"Notificar al CCO y pedir autorización. Solo con ella, aislar la puerta, señalizar el módulo y verificar el espacio entre la PDAP y el tren.", q:"best", min:1,
+      fb:"El aislamiento de una PDAP requiere autorización del CCO.", rams:"Un cambio en la configuración de la estación se autoriza antes de hacerse.", ref:REG+", §6.2.1 (niveles de actuación) y §6.4.3."},
+     {t:"Aislar la puerta de inmediato para ganar tiempo y avisar después.", q:"bad", min:0, barrera:true,
+      fb:"Aislar sin autorización cambia el estado de la estación sin que el CCO lo sepa.", rams:"Nada se cambia por cuenta propia.", ref:REG+", §6.2.1."},
+     {t:"Usar el Panel de Control Local (PCL) para forzar el estado de las puertas y dejar salir el tren.", q:"bad", min:0, barrera:true,
+      fb:"El PCL solo se opera por instrucción expresa del CCO. Su apertura genera alerta en el CCO.", rams:"Los mandos de seguridad tienen dueño.", ref:REG+", §6.4.4."}
+    ]},
+   {hora:"08:15", texto:"La puerta quedó aislada y señalizada. ¿Qué hace con la información?",
+    ops:[
+     {t:"Reportar al JET la falla y el aislamiento (hora, módulo, vía y acciones tomadas) para que quede en el Registro Diario, y mantener vigilado el módulo aislado.", q:"best", min:0,
+      fb:"La falla, el aislamiento y el uso de puertas son eventos de reporte obligatorio al JET.", rams:"FRACAS empieza con su reporte.", ref:REG+", §6.7.3 (eventos de reporte obligatorio)."},
+     {t:"No reportarlo, porque mantenimiento ya sabe.", q:"bad", min:0,
+      fb:"El reporte es obligatorio aunque otros lo sepan. Sin registro no hay trazabilidad.", rams:"Si no está registrado, no existe para el análisis.", ref:REG+", §6.7.3."},
+     {t:"Reportarlo solo si la puerta vuelve a fallar.", q:"bad", min:0,
+      fb:"La primera falla ya es información. Si se repite, el reporte anterior ayuda a encontrar la causa.", rams:"Si se repite, no es mala suerte: es una señal.", ref:REG+", §6.7.3."}
+    ]}
+  ],
+  reporte:{titulo:"Reporte al Jefe de Estación de Turno", emisor:"AUX – Estación E08", hora:"08:05",
+   ubicaciones:["Estación E08 – vía 1","Estación E08 – vía 2","Estación E07 – vía 1","Estación E09 – vía 1"], ubicacion:"Estación E08 – vía 1",
+   categorias:["Incidente – alarma de fallo"], receptores:["Jefe de Estación de Turno (JET)"], canales:["Radio TETRA","Presencial"],
+   claves:["puerta","pdap","modulo","módulo","12","aisl"]},
+  leccion:"Ante una falla de PDAP: asegurar la zona, guiar a los pasajeros, aislar solo con autorización del CCO y reportar al JET. Primero la operación segura, luego la reparación."
+ },
+
+ {id:"aux-via", rol:"aux", titulo:"Objeto y persona en la vía",
+  resumen:"A una usuaria se le cae el celular a la vía en la Estación E12 y su acompañante intenta bajar.",
+  ref:REG+", §6.2.1, §6.4.5 y §9.2.3",
+  contexto:"Hora punta de la tarde. Usted es Auxiliar de Estación (AUX) en la Estación E12, plataforma de la vía 2.",
+  minBase:0,
+  pasos:[
+   {hora:"17:40", situ:"Una usuaria le dice que se le cayó el celular a la vía. El próximo tren llega en tres minutos.",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"No bajar ni dejar que nadie baje; mantener a la usuaria detrás de la franja de seguridad e informar al JET y al CCO para recuperar el objeto de forma segura más tarde.", q:"best", min:0,
+      fb:"Un objeto que no afecta la circulación no justifica detener trenes, y el ingreso a la vía solo se hace por instrucción expresa del CCO.", rams:"Proporcionalidad y control del acceso a la vía.", ref:REG+", §6.2.1 y §9.2.3 (caída de objetos a la vía)."},
+     {t:"Presionar el RCE de plataforma para detener los trenes y bajar a recoger el celular.", q:"bad", min:6, barrera:true,
+      fb:"El reglamento prohíbe usar el RCE para recuperar un objeto que no afecta la circulación, y nadie baja a la vía sin instrucción expresa y corte de energía.", rams:"Los dispositivos de emergencia son para emergencias.", ref:REG+", §9.2.2 y §9.2.3."},
+     {t:"Bajar rápido a recogerlo antes de que llegue el tren.", q:"bad", min:0, barrera:true,
+      fb:"Riesgo de atropello y de electrocución con el tercer riel. Ningún objeto vale ese riesgo.", rams:"La vida primero.", ref:REG+", §9.2.2 (corte de energía para descenso a vía)."}
+    ]},
+   {hora:"17:42", alarma:"El acompañante de la usuaria salta a la vía para buscar el celular. El tren se aproxima a la estación.",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Accionar de inmediato el RCE de plataforma más cercano y notificar al CCO enseguida.", q:"best", min:5,
+      fb:"Intrusión en la vía con riesgo inminente: el personal de estación está habilitado para accionar el RCE sin esperar autorización, notificando de inmediato.", rams:"Ante riesgo inminente, actuar primero y notificar después.", ref:REG+", §6.4.5 y §9.2.3 (intrusión de vía en estación)."},
+     {t:"Llamar primero al CCO para pedir autorización de accionar el RCE.", q:"bad", min:5, barrera:true,
+      fb:"Con una persona en la vía y un tren llegando, no hay tiempo para pedir autorización. El reglamento lo faculta para accionar el RCE de inmediato.", rams:"Hay decisiones que no se delegan cuando hay una vida en riesgo.", ref:REG+", §6.4.5."},
+     {t:"Gritarle a la persona que suba y esperar a ver si lo logra.", q:"bad", min:0, barrera:true,
+      fb:"Si no alcanza a subir, el tren no habrá recibido ninguna orden de frenado.", rams:"Las barreras se activan antes del accidente, no después.", ref:REG+", §9.2.3."}
+    ]},
+   {hora:"17:45", situ:"La persona ya subió a la plataforma, sin lesiones. El tren está detenido antes de la estación.",
+    texto:"¿Cómo se restablece el RCE?",
+    ops:[
+     {t:"Verificar con el JET que la plataforma y la zona de vía están despejadas y pedir autorización al CCO para restablecer el dispositivo.", q:"best", min:2,
+      fb:"El restablecimiento de un dispositivo de emergencia requiere autorización del CCO, después de verificar que la zona está segura.", rams:"Restablecer también es una decisión de seguridad.", ref:REG+", §5.4.3 y §6.2.1."},
+     {t:"Restablecerlo usted mismo apenas la persona sube.", q:"bad", min:0, barrera:true,
+      fb:"Sin verificar la vía ni avisar al CCO, el tren podría avanzar con algo o alguien más en la zona.", rams:"Quien restablece debe estar seguro de que el peligro terminó.", ref:REG+", §6.2.1."},
+     {t:"Dejarlo activado hasta que llegue la policía.", q:"ok", min:12,
+      fb:"El peligro ya pasó y la línea sigue detenida sin necesidad. El reglamento busca restablecer los RCE en menos de 5 minutos una vez se cumplen las condiciones.", rams:"Disponibilidad: no prolongar una detención innecesaria.", ref:REG+", §9.2.3."}
+    ]},
+   {hora:"17:50", texto:"La operación se normalizó. ¿Qué reporta?",
+    ops:[
+     {t:"Reportar al JET la activación del RCE, la persona en la vía y el objeto (horas, vía y acciones), para el Registro Diario.", q:"best", min:0,
+      fb:"Toda activación de RCE, la presencia de personas u objetos en vía y el restablecimiento son eventos de reporte obligatorio.", rams:"El reporte permite revisar si la barrera funcionó como debía.", ref:REG+", §6.7.3."},
+     {t:"No reportar la activación, porque estuvo justificada.", q:"bad", min:0,
+      fb:"Se reporta toda activación: justificada, por falsa alarma o accidental.", rams:"Lo que no se registra no se aprende.", ref:REG+", §6.7.3."},
+     {t:"Reportar solo el celular perdido.", q:"bad", min:0,
+      fb:"Lo más importante del evento fue la intrusión en la vía y la activación del RCE.", rams:"Un reporte incompleto es un reporte incorrecto.", ref:REG+", §11."}
+    ]}
+  ],
+  reporte:{titulo:"Reporte al Jefe de Estación de Turno", emisor:"AUX – Estación E12", hora:"17:42",
+   ubicaciones:["Estación E12 – vía 1","Estación E12 – vía 2","Estación E11 – vía 2","Estación E13 – vía 2"], ubicacion:"Estación E12 – vía 2",
+   categorias:["Novedad operativa","Otros"], receptores:["Jefe de Estación de Turno (JET)"], canales:["Radio TETRA","Presencial"],
+   claves:["rce","via","vía","persona","celular","objeto"]},
+  leccion:"Un objeto en la vía no justifica detener trenes ni bajar. Una persona en la vía sí: RCE de inmediato y aviso al CCO. Restablecer solo con autorización y reportar todo, aunque haya salido bien."
+ }
+];
+
+/* ============================================================
+   ESTADO Y UTILIDADES
+   ============================================================ */
+var S = {nombre:"", rol:null, caso:null, paso:0, minutos:0, barreras:3, respuestas:[], reporte:null, export:null};
+var app = document.getElementById("app");
+
+function h(tag, attrs, children){
+  var e = document.createElement(tag);
+  if(attrs){ for(var k in attrs){ if(k === "class") e.className = attrs[k]; else if(k === "text") e.textContent = attrs[k]; else e.setAttribute(k, attrs[k]); } }
+  (children || []).forEach(function(c){ if(c == null) return; e.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+  return e;
+}
+function norm(s){ return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+function casoActual(){ return CASOS.filter(function(c){ return c.id === S.caso; })[0]; }
+function categoriaAT11(min){
+  if(min <= 5) return "Perturbación menor (hasta 5 min)";
+  if(min <= 30) return "Perturbación mayor (más de 5 y hasta 30 min)";
+  return "Situación de emergencia (más de 30 min)";
+}
+function irArriba(){ window.scrollTo({top:0, behavior:"auto"}); }
+
+/* ============================================================
+   PANTALLA 1: INICIO
+   ============================================================ */
+function pantallaInicio(){
+  app.innerHTML = "";
+  var nombre = h("input", {type:"text", id:"nombre", autocomplete:"off", placeholder:"Nombre y apellido"});
+  nombre.value = S.nombre;
+  var roles = h("div", {class:"grid3", role:"radiogroup", "aria-label":"Especialidad"});
+  var listaWrap = h("div", {class:"stack", id:"lista"});
+  Object.keys(ROLES).forEach(function(k){
+    var b = h("button", {type:"button", class:"choice" + (S.rol === k ? " sel" : ""), "aria-pressed": String(S.rol === k)}, [
+      h("span", {class:"t", text:ROLES[k].nombre}), h("span", {class:"d", text:ROLES[k].desc})]);
+    b.addEventListener("click", function(){ S.rol = k; pantallaInicio(); });
+    roles.appendChild(b);
+  });
+  nombre.addEventListener("input", function(){ S.nombre = nombre.value; });
+
+  app.appendChild(h("section", {class:"stack"}, [
+    h("div", {class:"stack"}, [
+      h("p", {class:"eyebrow", text:"Práctica de decisiones y reporte"}),
+      h("h1", {text:"Usted toma las decisiones. El sistema le muestra las consecuencias."}),
+      h("p", {class:"muted", text:"Cada caso es una situación de la operación de la L1MB. En cada paso elige qué hacer y ve su efecto en tres medidores: minutos de servicio perdidos, barreras de seguridad activas y calidad del registro. Al final diligencia el registro de la novedad."})
+    ]),
+    h("div", {class:"card stack"}, [
+      h("div", null, [h("label", {class:"f", for:"nombre", text:"1. Su nombre"}), nombre]),
+      h("div", null, [h("span", {class:"f", text:"2. Su especialidad"}), roles])
+    ]),
+    listaWrap
+  ]));
+  if(S.rol) renderLista(listaWrap, nombre);
+}
+function tarjetaCaso(c, nombreInput){
+  var b = h("button", {type:"button", class:"case"}, [
+    h("span", {class:"tag", text:ROLES[c.rol].nombre}),
+    h("h3", {text:c.titulo}),
+    h("span", {class:"muted", text:c.resumen}),
+    h("span", {class:"ref", text:c.ref})]);
+  b.addEventListener("click", function(){
+    S.nombre = nombreInput.value.trim();
+    if(S.nombre.length < 3){ nombreInput.focus(); document.getElementById("aviso").textContent = "Escriba su nombre antes de empezar."; return; }
+    iniciarCaso(c.id);
+  });
+  return b;
+}
+function renderLista(wrap, nombreInput){
+  var propios = CASOS.filter(function(c){ return c.rol === S.rol; });
+  var otros = CASOS.filter(function(c){ return c.rol !== S.rol; });
+  var grid = h("div", {class:"caselist"}); propios.forEach(function(c){ grid.appendChild(tarjetaCaso(c, nombreInput)); });
+  var grid2 = h("div", {class:"caselist"}); otros.forEach(function(c){ grid2.appendChild(tarjetaCaso(c, nombreInput)); });
+  wrap.appendChild(h("h2", {text:"3. Elija un caso"}));
+  wrap.appendChild(h("p", {class:"muted", id:"aviso", "aria-live":"polite", text:"Casos de su especialidad:"}));
+  wrap.appendChild(grid);
+  var det = h("details", {class:"other"}, [h("summary", {text:"Ver casos desde otro rol (para entender lo que ve su contraparte)"}), h("div", {style:"margin-top:12px"}, [grid2])]);
+  wrap.appendChild(det);
+}
+
+/* ============================================================
+   PANTALLA 2: CASO
+   ============================================================ */
+function iniciarCaso(id){
+  S.caso = id; S.paso = 0; S.barreras = 3; S.respuestas = []; S.reporte = null; S.export = null;
+  S.minutos = casoActual().minBase;
+  var c = casoActual(); app.innerHTML = ""; irArriba();
+  app.appendChild(h("section", {class:"stack"}, [
+    h("p", {class:"eyebrow", text:ROLES[c.rol].nombre + " · " + c.ref}),
+    h("h1", {text:c.titulo}),
+    h("div", {class:"situ"}, [h("p", {text:c.contexto}), h("p", {class:"muted", text:"Fecha del caso: " + FECHA_CASO})]),
+    h("p", {class:"muted", text:"No hay trampas: elija lo que haría de verdad en su puesto."}),
+    h("div", {class:"row"}, [h("button", {type:"button", class:"btn ghost", id:"volver", text:"Volver"}), h("button", {type:"button", class:"btn", id:"empezar", text:"Empezar el caso"})])
+  ]));
+  document.getElementById("volver").onclick = pantallaInicio;
+  document.getElementById("empezar").onclick = pantallaPaso;
+}
+
+function franja(estadoRegistro){
+  var sh = h("div", {class:"shields", "aria-label": S.barreras + " de 3 barreras activas"});
+  for(var i = 0; i < 3; i++) sh.appendChild(h("span", {class: i < S.barreras ? "" : "off"}));
+  return h("div", {class:"status"}, [h("div", {class:"meters"}, [
+    h("div", {class:"meter"}, [h("div", {class:"ml", text:"Servicio perdido"}), h("div", {class:"mv", text:S.minutos + " min"})]),
+    h("div", {class:"meter"}, [h("div", {class:"ml", text:"Barreras"}), sh]),
+    h("div", {class:"meter"}, [h("div", {class:"ml", text:"Registro"}), h("div", {class:"mv", style:"font-size:18px", text:estadoRegistro || "Pendiente"})])
+  ])]);
+}
+
+function pantallaPaso(){
+  var c = casoActual(), p = c.pasos[S.paso]; app.innerHTML = ""; irArriba();
+  app.appendChild(franja());
+  var opts = h("div", {class:"opts", id:"opts"});
+  p.ops.forEach(function(o, i){
+    var b = h("button", {type:"button", class:"opt"}, [h("span", {class:"k", text:String.fromCharCode(65 + i) + "."}), h("span", {text:o.t})]);
+    b.addEventListener("click", function(){ elegir(i); });
+    opts.appendChild(b);
+  });
+  var cuerpo = [
+    h("div", {class:"row"}, [h("span", {class:"muted", text:"Decisión " + (S.paso + 1) + " de " + c.pasos.length + " · " + ROLES[c.rol].nombre}), h("span", {class:"clock", text:p.hora})])
+  ];
+  if(p.alarma) cuerpo.push(h("div", {class:"alarm", text:p.alarma}));
+  if(p.radio) cuerpo.push(h("div", {class:"radio", text:"Radio · " + p.radio}));
+  if(p.situ) cuerpo.push(h("div", {class:"situ", text:p.situ}));
+  cuerpo.push(h("h2", {text:p.texto}), opts, h("div", {id:"fb", "aria-live":"polite"}),
+    h("div", {class:"row"}, [h("span"), h("button", {type:"button", class:"btn", id:"sig", hidden:"hidden"})]));
+  app.appendChild(h("section", {class:"card stack"}, cuerpo));
+}
+
+function elegir(i){
+  var c = casoActual(), p = c.pasos[S.paso], o = p.ops[i];
+  var bi = p.ops.map(function(x){ return x.q; }).indexOf("best");
+  S.minutos += o.min; if(o.barrera && S.barreras > 0) S.barreras--;
+  S.respuestas.push({hora:p.hora, pregunta:p.texto, elegida:o.t, calidad:o.q, mejor:p.ops[bi].t, ref:o.ref});
+  Array.prototype.forEach.call(document.getElementById("opts").children, function(b, idx){
+    b.disabled = true;
+    if(idx === i) b.classList.add(o.q); else if(idx === bi) b.classList.add("best"); else b.classList.add("dim");
+  });
+  var titulo = o.q === "best" ? "Buena decisión" : (o.q === "ok" ? "Se puede hacer mejor" : "Decisión de riesgo");
+  var efectos = [];
+  if(o.barrera) efectos.push("Se perdió una barrera de seguridad.");
+  if(o.min) efectos.push("Sumó " + o.min + " min de servicio perdido.");
+  var fb = document.getElementById("fb"); fb.innerHTML = "";
+  fb.appendChild(h("div", {class:"fb " + o.q}, [
+    h("span", {class:"h", text:titulo}), h("span", {text:o.fb + (efectos.length ? " " + efectos.join(" ") : "")}),
+    h("span", {class:"rams", text:"Idea RAMS: " + o.rams}), h("span", {class:"ref", text:"Referencia: " + o.ref})]));
+  var old = document.querySelector(".status"); old.parentNode.replaceChild(franja(), old);
+  var sig = document.getElementById("sig"); sig.hidden = false;
+  sig.textContent = S.paso + 1 < c.pasos.length ? "Siguiente decisión" : "Diligenciar el registro";
+  sig.onclick = function(){ S.paso++; if(S.paso < c.pasos.length) pantallaPaso(); else pantallaRegistro(); };
+  sig.focus();
+}
+
+/* ============================================================
+   PANTALLA 3: REGISTRO (Registro Diario, Anexo 07)
+   ============================================================ */
+function selectCon(id, opciones){
+  var s = h("select", {id:id}); s.appendChild(h("option", {value:"", text:"Seleccione…"}));
+  opciones.forEach(function(o){ s.appendChild(h("option", {value:o, text:o})); });
+  return s;
+}
+function campo(labelText, control, full){
+  return h("div", {class: full ? "full" : ""}, [h("label", {class:"f", for:control.id, text:labelText}), control]);
+}
+function pantallaRegistro(){
+  var c = casoActual(), r = c.reporte; app.innerHTML = ""; irArriba();
+  app.appendChild(franja("En curso"));
+  var fecha = h("input", {type:"text", id:"r_fecha", placeholder:"AAAA/MM/DD", inputmode:"numeric"});
+  var hora = h("input", {type:"time", id:"r_hora"});
+  var ubi = selectCon("r_ubi", r.ubicaciones);
+  var cat = selectCon("r_cat", CATEGORIAS);
+  var cont = h("textarea", {id:"r_cont", placeholder:"Qué pasó, dónde, qué equipo o tren, qué se hizo y quién lo autorizó. Sin abreviaturas ni códigos no oficiales."});
+  var rec = selectCon("r_rec", RECEPTORES);
+  var can = selectCon("r_can", CANALES);
+  var form = h("form", {class:"formgrid", id:"form"}, [
+    campo("Fecha (AAAA/MM/DD)", fecha), campo("Hora del evento", hora),
+    campo("Ubicación", ubi), h("div", null, [h("span", {class:"f", text:"Emisor"}), h("div", {class:"fixed", text:r.emisor})]),
+    campo("Categoría", cat, true), campo("Contenido", cont, true), campo("Receptor", rec), campo("Canal", can),
+    h("div", {class:"full row"}, [h("span", {class:"muted", text:"Revise antes de guardar: el registro se califica."}), h("button", {type:"submit", class:"btn", text:"Guardar registro"})])
+  ]);
+  form.addEventListener("submit", function(ev){ ev.preventDefault(); calificar(); });
+  app.appendChild(h("section", {class:"card stack"}, [
+    h("p", {class:"eyebrow", text:"Registro Diario · Novedades e incidentes"}),
+    h("h2", {text:r.titulo}),
+    h("p", {class:"muted", text:"La norma pide registrar en este orden: fecha y hora, ubicación, emisor, contenido, receptor y canal. Reportar tarde, omitir o reportar sin verificar se considera un reporte incorrecto."}),
+    form]));
+}
+function calificar(){
+  var c = casoActual(), r = c.reporte;
+  var v = {fecha:document.getElementById("r_fecha").value.trim(), hora:document.getElementById("r_hora").value, ubicacion:document.getElementById("r_ubi").value,
+    categoria:document.getElementById("r_cat").value, contenido:document.getElementById("r_cont").value.trim(), receptor:document.getElementById("r_rec").value, canal:document.getElementById("r_can").value};
+  var nc = norm(v.contenido);
+  var claves = r.claves.filter(function(k){ return nc.indexOf(norm(k)) >= 0; }).length;
+  var checks = [
+    {n:"Fecha en formato AAAA/MM/DD", ok:v.fecha === FECHA_CASO, tip:"Debía ser " + FECHA_CASO + ", con año, mes y día separados por barras."},
+    {n:"Hora del evento", ok:v.hora === r.hora, tip:"El evento empezó a las " + r.hora + ". La hora exacta permite cruzar el registro con los sistemas."},
+    {n:"Ubicación", ok:v.ubicacion === r.ubicacion, tip:"Correcta: " + r.ubicacion + "."},
+    {n:"Categoría", ok:r.categorias.indexOf(v.categoria) >= 0, tip:"Correcta: " + r.categorias.join(" u ") + "."},
+    {n:"Contenido completo", ok:v.contenido.length >= 60 && claves >= 2, tip:"Describa qué pasó, con el tren, equipo o lugar y lo que se hizo (al menos dos datos clave y unas dos frases)."},
+    {n:"Receptor", ok:r.receptores.indexOf(v.receptor) >= 0, tip:"Debía ir a: " + r.receptores.join(" o ") + "."},
+    {n:"Canal", ok:r.canales.indexOf(v.canal) >= 0, tip:"Canal esperado: " + r.canales.join(" o ") + "."}
+  ];
+  S.reporte = {valores:v, checks:checks};
+  pantallaResultado();
+}
+
+/* ============================================================
+   PANTALLA 4: RESULTADO Y EXPORTACIÓN
+   ============================================================ */
+function puntajes(){
+  var dec = 0; S.respuestas.forEach(function(x){ dec += x.calidad === "best" ? 10 : (x.calidad === "ok" ? 5 : 0); });
+  var bar = S.barreras * 10;
+  var okR = S.reporte.checks.filter(function(k){ return k.ok; }).length;
+  var rep = Math.round(30 * okR / S.reporte.checks.length);
+  return {dec:dec, bar:bar, rep:rep, okR:okR, total:dec + bar + rep};
+}
+function pantallaResultado(){
+  var c = casoActual(), P = puntajes(); app.innerHTML = ""; irArriba();
+  app.appendChild(franja(P.okR + " de " + S.reporte.checks.length));
+  var tb = h("tbody");
+  S.respuestas.forEach(function(x, i){
+    var et = x.calidad === "best" ? "Buena" : (x.calidad === "ok" ? "Mejorable" : "De riesgo");
+    tb.appendChild(h("tr", null, [h("td", {text:String(i + 1)}), h("td", null, [h("div", {text:x.elegida}), h("span", {class:"tag " + x.calidad, text:et})]), h("td", {text: x.calidad === "best" ? "—" : x.mejor})]));
+  });
+  var tb2 = h("tbody");
+  S.reporte.checks.forEach(function(k){
+    tb2.appendChild(h("tr", null, [h("td", null, [h("span", {class:"tag " + (k.ok ? "best" : "bad"), text:k.ok ? "Bien" : "Falta"})]), h("td", {text:k.n}), h("td", {text:k.ok ? "" : k.tip})]));
+  });
+  var msg = h("p", {class:"muted", id:"expmsg", "aria-live":"polite"});
+  var msgS = h("p", {class:"muted", id:"sheetsmsg", "aria-live":"polite"});
+  var bExp = h("button", {type:"button", class:"btn", text:"Descargar mi resultado (CSV)"});
+  bExp.addEventListener("click", function(){ exportar(P, msg); });
+  var bOtra = h("button", {type:"button", class:"btn ghost", text:"Elegir otro caso"});
+  bOtra.addEventListener("click", pantallaInicio);
+  app.appendChild(h("section", {class:"card stack"}, [
+    h("p", {class:"eyebrow", text:"Resultado · " + c.titulo}),
+    h("h2", {text:S.nombre + " · " + ROLES[c.rol].nombre}),
+    h("div", {class:"score", text:P.total + " / 100"}),
+    h("div", {class:"parts"}, [
+      h("div", {class:"part"}, [h("div", {class:"muted", text:"Decisiones"}), h("div", {class:"pv", text:P.dec + " / 40"})]),
+      h("div", {class:"part"}, [h("div", {class:"muted", text:"Barreras conservadas"}), h("div", {class:"pv", text:P.bar + " / 30"})]),
+      h("div", {class:"part"}, [h("div", {class:"muted", text:"Registro"}), h("div", {class:"pv", text:P.rep + " / 30"})])]),
+    h("p", null, [h("strong", {text:"Servicio perdido: " + S.minutos + " min. "}), document.createTextNode("Según el AT11, corresponde a una " + categoriaAT11(S.minutos).toLowerCase() + ".")]),
+    h("div", {class:"lesson"}, [h("strong", {text:"Lo que debe llevarse: "}), document.createTextNode(c.leccion)]),
+    h("h3", {text:"Sus decisiones"}),
+    h("div", {class:"tablewrap"}, [h("table", null, [h("thead", null, [h("tr", null, [h("th", {text:"#"}), h("th", {text:"Lo que eligió"}), h("th", {text:"La mejor opción"})])]), tb])]),
+    h("h3", {text:"Su registro"}),
+    h("div", {class:"tablewrap"}, [h("table", null, [h("thead", null, [h("tr", null, [h("th", {text:""}), h("th", {text:"Criterio"}), h("th", {text:"Qué faltó"})])]), tb2])]),
+    h("div", {class:"row"}, [bOtra, bExp]), msg, msgS
+  ]));
+  enviarASheets(P, msgS);
+}
+
+// ===== Envío de resultados a Google Sheets =====
+// Pegue aquí la URL de su aplicación web de Apps Script (termina en /exec).
+var SHEETS_URL = "https://script.google.com/macros/s/AKfycbyukk96QiL2NcfdEbAWZLhr65jH6udB5ndqQOVMuKWPl-UgE60yB6i9xCV70mYitlY1xA/exec";
+var ACTIVIDAD = "Simulador de casos RAMS";
+function datosResultado(P){
+  var c = casoActual(), d = new Date();
+  var f = d.getFullYear() + "/" + String(d.getMonth() + 1).padStart(2, "0") + "/" + String(d.getDate()).padStart(2, "0") + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  var enc = ["Fecha de la práctica","Nombre","Especialidad del caso","Caso","Puntaje total","Decisiones (40)","Barreras (30)","Registro (30)","Minutos perdidos","Categoría AT11"];
+  var fila = [f, S.nombre, ROLES[c.rol].nombre, c.titulo, P.total, P.dec, P.bar, P.rep, S.minutos, categoriaAT11(S.minutos)];
+  S.respuestas.forEach(function(x, i){ enc.push("Decisión " + (i + 1)); fila.push((x.calidad === "best" ? "Buena" : (x.calidad === "ok" ? "Mejorable" : "De riesgo")) + ": " + x.elegida); });
+  S.reporte.checks.forEach(function(k){ enc.push("Registro - " + k.n); fila.push(k.ok ? "Bien" : "Falta"); });
+  enc.push("Registro - contenido"); fila.push(S.reporte.valores.contenido);
+  return {enc:enc, fila:fila};
+}
+function enviarASheets(P, msgS){
+  if(!SHEETS_URL){ msgS.textContent = ""; return; }
+  var D = datosResultado(P);
+  var cuerpo = JSON.stringify({actividad: ACTIVIDAD, hoja: casoActual().titulo, encabezados: D.enc, fila: D.fila});
+  msgS.textContent = "Enviando su resultado al instructor…";
+  fetch(SHEETS_URL, {method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:cuerpo})
+    .then(function(){ msgS.textContent = "✔ Resultado enviado al instructor."; })
+    .catch(function(){ msgS.textContent = "No se pudo enviar el resultado. Descargue el CSV y entrégueselo al instructor."; });
+}
+
+function csvCampo(x){ x = String(x == null ? "" : x).replace(/\r?\n/g, " "); return '"' + x.replace(/"/g, '""') + '"'; }
+function construirCSV(P){
+  var D = datosResultado(P);
+  return "\ufeff" + D.enc.map(csvCampo).join(";") + "\r\n" + D.fila.map(csvCampo).join(";") + "\r\n";
+}
+function nombreArchivo(){
+  var c = casoActual();
+  return ("resultado_" + S.nombre + "_" + c.id).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9_-]+/g, "_") + ".csv";
+}
+function exportar(P, msg){
+  var csv = construirCSV(P), name = nombreArchivo();
+  var viaClaude = window.claude && typeof window.claude.use === "function";
+  if(viaClaude){
+    msg.textContent = "Preparando la descarga…";
+    window.claude.use("downloads").then(function(dl){
+      if(!dl){ msg.textContent = "La descarga no está disponible en esta vista. Muestre esta pantalla al instructor."; return; }
+      return dl.save({filename:name, data:csv}).then(function(){ msg.textContent = "Archivo " + name + " guardado. Entréguelo al instructor."; },
+        function(e){ msg.textContent = (e && e.code === "declined") ? "Descarga cancelada." : "No se pudo descargar el archivo. Muestre esta pantalla al instructor."; });
+    }, function(){ msg.textContent = "No se pudo descargar el archivo. Muestre esta pantalla al instructor."; });
+    return;
+  }
+  try{
+    var blob = new Blob([csv], {type:"text/csv;charset=utf-8"}), a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    msg.textContent = "Se descargó el archivo " + name + ". Entréguelo al instructor.";
+  }catch(e){ msg.textContent = "No se pudo descargar el archivo en este equipo. Muestre esta pantalla al instructor."; }
+}
+
+pantallaInicio();
+</script>
+
+</body></html>

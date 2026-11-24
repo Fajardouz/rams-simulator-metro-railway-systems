@@ -1,6 +1,6 @@
 :root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
 /* Concepto: consola de entrenamiento. Franja de estado fija (reloj, barreras, registro) sobre una columna de lectura.
-   Color: azul ML1 como mando, amarillo como señal de atención, rojo solo para riesgo. */
+   Color: azul como mando, amarillo como señal de atención, rojo solo para riesgo. */
 :root{
   --bg:#eef2f8; --surface:#ffffff; --surface-2:#f5f7fb; --ink:#16202c; --ink-soft:#566273; --line:#d3dbe7;
   --brand:#004090; --brand-strong:#00306c; --brand-soft:#e3ebf7; --signal:#f0d010; --signal-soft:#fff6cc; --signal-ink:#5c4a00;

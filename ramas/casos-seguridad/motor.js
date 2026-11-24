@@ -41,7 +41,7 @@ function pantallaInicio(){
     h("div", {class:"stack"}, [
       h("p", {class:"eyebrow", text:"Práctica de decisiones y reporte"}),
       h("h1", {text:"Usted toma las decisiones. El sistema le muestra las consecuencias."}),
-      h("p", {class:"muted", text:"Cada caso es una situación de la operación de la L1MB. En cada paso elige qué hacer y ve su efecto en tres medidores: minutos de servicio perdidos, barreras de seguridad activas y calidad del registro. Al final diligencia el registro de la novedad."})
+      h("p", {class:"muted", text:"Cada caso es una situación de la operación de un sistema metro-ferroviario. En cada paso elige qué hacer y ve su efecto en tres medidores: minutos de servicio perdidos, barreras de seguridad activas y calidad del registro. Al final diligencia el registro de la novedad."})
     ]),
     h("div", {class:"card stack"}, [
       h("div", null, [h("label", {class:"f", for:"nombre", text:"1. Su nombre"}), nombre]),

@@ -1,6 +1,7 @@
-# Simulador RAMS · Metro Línea 1
+# Simulador RAMS · Sistemas metro-ferroviarios
 
-Sitio de práctica RAMS para personal de Operación y Mantenimiento.
+Simulador general de práctica RAMS para personal de operación y mantenimiento de sistemas metro-ferroviarios.
+Los casos y referencias son ilustrativos; adáptelos al reglamento de cada sistema.
 Web publicada: https://fajardouz.github.io/rams-simulator-metro-railway-systems/
 
 ## Estructura
@@ -14,7 +15,7 @@ assets/
   comun.js                  Utilidades comunes (envío de resultados, nombre)
   actividades.js            Motor de ejercicios (arrastrar y preguntas). No hace falta tocarlo.
   portal.js                 Dibuja el portal
-  logo.js                   Logo incrustado
+  logo.js                   Logo (ícono de tren)
 ramas/
   teoria/                   Ejercicios teóricos RAMS (ciclo en V, letras RAMS, indicadores, conceptos)
     contenido.js            ← SE ALIMENTA AQUÍ

@@ -65,8 +65,9 @@ function tarjetaCaso(c, nombreInput){
   return b;
 }
 function renderLista(wrap, nombreInput){
-  var propios = CASOS.filter(function(c){ return c.rol === S.rol; });
-  var otros = CASOS.filter(function(c){ return c.rol !== S.rol; });
+  var base = window.SESION ? SESION.filtrar(CASOS) : CASOS; /* ?ver= limita los casos a los de la sesión */
+  var propios = base.filter(function(c){ return c.rol === S.rol; });
+  var otros = base.filter(function(c){ return c.rol !== S.rol; });
   var grid = h("div", {class:"caselist"}); propios.forEach(function(c){ grid.appendChild(tarjetaCaso(c, nombreInput)); });
   var grid2 = h("div", {class:"caselist"}); otros.forEach(function(c){ grid2.appendChild(tarjetaCaso(c, nombreInput)); });
   wrap.appendChild(h("h2", {text:"3. Elija un caso"}));

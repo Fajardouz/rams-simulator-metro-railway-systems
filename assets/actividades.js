@@ -24,7 +24,7 @@
     inp.value = nombre;
     var aviso = h("p", {class:"muted", "aria-live":"polite"});
     var lista = h("div", {class:"caselist"});
-    R.ejercicios.forEach(function(ej){
+    (window.SESION ? SESION.filtrar(R.ejercicios) : R.ejercicios).forEach(function(ej){
       var tipo = ej.tipo === "colocar" ? (ej.forma === "v" ? "Arrastrar al ciclo en V" : ej.forma === "secuencia" ? "Ordenar pasos" : "Emparejar") : "Preguntas";
       lista.appendChild(h("button", {type:"button", class:"case", onclick:function(){
         var n = inp.value.trim();

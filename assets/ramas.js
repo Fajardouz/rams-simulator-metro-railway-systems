@@ -30,8 +30,8 @@ var SESIONES = [
    ]},
   {n:2, titulo:"Los minutos que cuestan", tema:"Vida de una falla, perturbaciones del servicio, disponibilidad y papel de cada rol.",
    actividades:[
-     {titulo:"La misma falla, tres respuestas", descripcion:"Tren detenido por falla de tracción: cada decisión suma o ahorra minutos, y el contrato cuenta desde el reporte.", href:"ramas/casos-seguridad/index.html?ver=cco-traccion,cot-traccion,aux-traccion"},
-     {titulo:"Detective de fallas", descripcion:"Busque la falla que se repite en dos semanas de reportes.", href:"ramas/detective/index.html"}
+     {titulo:"Temporada de fallas", descripcion:"Tres fallas de su especialidad, de menor a mayor duración: cada decisión suma o ahorra minutos, y el contrato cuenta desde el reporte o la alarma.", href:"ramas/casos-seguridad/index.html?ver=cco-mochila,cot-mochila,aux-mochila,cco-traccion,cot-traccion,aux-traccion,cco-senalizacion,cot-senalizacion,aux-senalizacion"},
+     {titulo:"Detective de fallas", descripcion:"Dos casos y un reporte: encuentre la falla que se repite, separe lo urgente de lo que solo aparece mucho y escriba el reporte para mantenimiento.", href:"ramas/detective/index.html"}
    ]},
   {n:3, titulo:"Las barreras invisibles", tema:"Peligro, riesgo, barreras de seguridad, modos degradados y factores humanos.",
    actividades:[

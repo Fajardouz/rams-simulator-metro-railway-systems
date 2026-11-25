@@ -2,7 +2,7 @@
 /* ============================================================
    ESTADO Y UTILIDADES
    ============================================================ */
-var S = {nombre:"", rol:null, caso:null, paso:0, minutos:0, minContrato:0, barreras:3, respuestas:[], reporte:null, export:null};
+var S = {temporada:[], nombre:"", rol:null, caso:null, paso:0, minutos:0, minContrato:0, barreras:3, respuestas:[], reporte:null, export:null};
 var app = document.getElementById("app");
 
 function h(tag, attrs, children){
@@ -71,7 +71,8 @@ function renderLista(wrap, nombreInput){
   var grid = h("div", {class:"caselist"}); propios.forEach(function(c){ grid.appendChild(tarjetaCaso(c, nombreInput)); });
   var grid2 = h("div", {class:"caselist"}); otros.forEach(function(c){ grid2.appendChild(tarjetaCaso(c, nombreInput)); });
   wrap.appendChild(h("h2", {text:"3. Elija un caso"}));
-  wrap.appendChild(h("p", {class:"muted", id:"aviso", "aria-live":"polite", text:"Casos de su especialidad:"}));
+  var enTemporada = window.SESION && SESION.ver && propios.length > 1;
+  wrap.appendChild(h("p", {class:"muted", id:"aviso", "aria-live":"polite", text: enTemporada ? "Temporada de fallas: resuelva los casos en orden, de la perturbación menor a la más larga. Al final de cada caso verá su resumen." : "Casos de su especialidad:"}));
   wrap.appendChild(grid);
   var det = h("details", {class:"other"}, [h("summary", {text:"Ver casos desde otro rol (para entender lo que ve su contraparte)"}), h("div", {style:"margin-top:12px"}, [grid2])]);
   wrap.appendChild(det);
@@ -210,14 +211,39 @@ function calificar(){
    PANTALLA 4: RESULTADO Y EXPORTACIÓN
    ============================================================ */
 function puntajes(){
-  var dec = 0; S.respuestas.forEach(function(x){ dec += x.calidad === "best" ? 10 : (x.calidad === "ok" ? 5 : 0); });
+  var bruto = 0; S.respuestas.forEach(function(x){ bruto += x.calidad === "best" ? 10 : (x.calidad === "ok" ? 5 : 0); });
+  var dec = S.respuestas.length ? Math.round(40 * bruto / (10 * S.respuestas.length)) : 0; /* siempre sobre 40, sin importar cuántas decisiones tenga el caso */
   var bar = S.barreras * 10;
   var okR = S.reporte.checks.filter(function(k){ return k.ok; }).length;
   var rep = Math.round(30 * okR / S.reporte.checks.length);
   return {dec:dec, bar:bar, rep:rep, okR:okR, total:dec + bar + rep};
 }
+/* Temporada: casos de la misma especialidad abiertos desde una sesión (?ver=...), en orden */
+function casosTemporada(rol){ return (window.SESION && SESION.ver ? SESION.filtrar(CASOS) : []).filter(function(x){ return x.rol === rol; }); }
+function siguienteDeTemporada(c){
+  var lista = casosTemporada(c.rol);
+  for(var i = 0; i < lista.length - 1; i++) if(lista[i].id === c.id) return lista[i + 1];
+  return null;
+}
+function resumenTemporada(c){
+  var lista = casosTemporada(c.rol); if(lista.length < 2) return null;
+  var tb = h("tbody"), totMin = 0;
+  lista.forEach(function(x, i){
+    var r = null; S.temporada.forEach(function(t){ if(t.id === x.id) r = t; });
+    if(r) totMin += r.min;
+    tb.appendChild(h("tr", null, [h("td", {text:"Ronda " + (i + 1) + " · " + x.titulo}),
+      h("td", {text: r ? r.min + " min" : "—"}), h("td", {text: r ? r.cat : "—"}), h("td", {text: r ? r.pts + " / 100" : "Pendiente"})]));
+  });
+  return h("div", {class:"stack"}, [h("h3", {text:"Su temporada de fallas"}),
+    h("div", {class:"tablewrap"}, [h("table", null, [h("thead", null, [h("tr", null, [h("th", {text:"Caso"}), h("th", {text:"Servicio perdido"}), h("th", {text:"Categoría AT11"}), h("th", {text:"Puntaje"})])]), tb])]),
+    h("p", {class:"muted", text:"Minutos de servicio perdidos en toda la temporada: " + totMin + " min."})]);
+}
 function pantallaResultado(){
   var c = casoActual(), P = puntajes(); app.innerHTML = ""; irArriba();
+  S.temporada = S.temporada.filter(function(t){ return t.id !== c.id; });
+  S.temporada.push({id:c.id, min:S.minutos, cat:categoriaAT11(S.minContrato), pts:P.total});
+  var sigT = siguienteDeTemporada(c), bSig = null;
+  if(sigT){ bSig = h("button", {type:"button", class:"btn", text:"Siguiente caso de la temporada →"}); bSig.addEventListener("click", function(){ iniciarCaso(sigT.id); }); }
   app.appendChild(franja(P.okR + " de " + S.reporte.checks.length));
   var tb = h("tbody");
   S.respuestas.forEach(function(x, i){
@@ -250,7 +276,8 @@ function pantallaResultado(){
     h("div", {class:"tablewrap"}, [h("table", null, [h("thead", null, [h("tr", null, [h("th", {text:"#"}), h("th", {text:"Lo que eligió"}), h("th", {text:"La mejor opción"})])]), tb])]),
     h("h3", {text:"Su registro"}),
     h("div", {class:"tablewrap"}, [h("table", null, [h("thead", null, [h("tr", null, [h("th", {text:""}), h("th", {text:"Criterio"}), h("th", {text:"Qué faltó"})])]), tb2])]),
-    h("div", {class:"row"}, [bOtra, bExp]), msg, msgS
+    resumenTemporada(c),
+    h("div", {class:"row"}, [bOtra, h("div", {class:"row"}, [bExp, bSig])]), msg, msgS
   ]));
   enviarASheets(P, msgS);
 }

@@ -339,6 +339,140 @@ var CASOS = [
  },
 
  /* ============================================================
+    TEMPORADA DE FALLAS · SESIÓN 2 · RONDA 1: PERTURBACIÓN MENOR
+    Una mochila atrapada en una puerta del Tren 107 en E04, vista desde los tres roles.
+    Caso de formación: debe validarse contra el reglamento vigente antes de usarse.
+    ============================================================ */
+ {id:"cco-mochila", rol:"cco", titulo:"Mochila atrapada en una puerta del tren",
+  resumen:"Hora punta. Una puerta del Tren 107 no cierra en la Estación E04. Bien atendida, es una perturbación de pocos minutos.",
+  ref:REG,
+  contexto:"Hora punta de la mañana. Usted es el controlador de circulación de turno en el CCO. El Tren uno-cero-siete (107) circula en UTO con un conductor a bordo (COT). Hay un auxiliar de estación en el andén de E04.",
+  minBase:1,
+  pasos:[
+   {hora:"08:10", alarma:"ALARMA: la puerta 2 del coche 3 del Tren 107 no cierra en la Estación E04, vía 2.",
+    texto:"¿Qué hace primero?",
+    ops:[
+     {t:"Revisar la cámara CCTV de esa puerta y aplicar retención al tren mientras entiende qué pasa.", q:"best", min:1,
+      fb:"Mira antes de actuar y asegura que el tren no salga con la puerta abierta.", rams:"Entender primero cuesta un minuto y evita decisiones a ciegas.", ref:REG},
+     {t:"Llamar al conductor para preguntarle qué pasa, sin mirar la cámara.", q:"ok", min:2,
+      fb:"Funciona, pero la cámara le habría mostrado la causa de inmediato. Se pierde tiempo preguntando lo que usted podía ver.", rams:"Usar todas las fuentes de información acorta el diagnóstico.", ref:REG},
+     {t:"Enviar el cierre remoto de puertas sin revisar la cámara.", q:"bad", min:0, barrera:true,
+      fb:"Si hay una persona o un objeto atrapado, cerrar a ciegas puede lesionar a alguien.", rams:"Una acción remota sin verificar rompe una barrera.", ref:REG}
+    ]},
+   {hora:"08:11", situ:"La cámara muestra la correa de una mochila atrapada en la puerta. El auxiliar de estación está a pocos metros.",
+    texto:"¿Qué ordena?",
+    ops:[
+     {t:"\"Control a estación cero-cuatro, responda.\" Pide al auxiliar retirar la mochila de la puerta dos del coche tres del tren uno-cero-siete y confirmar con colación. Avisa al conductor.", q:"best", min:1,
+      fb:"El auxiliar está al lado: es la forma más rápida de resolverlo, con una orden clara y confirmada.", rams:"La solución proporcional es la más rápida: la puerta no tiene falla.", ref:REG},
+     {t:"Ordenar al conductor aislar la puerta y continuar el servicio.", q:"ok", min:3,
+      fb:"El tren sigue, pero una puerta sana queda fuera de servicio, la mochila sigue atrapada y mantenimiento tendrá que revisar algo que no estaba dañado.", rams:"Aislar un equipo sano también es perder disponibilidad.", ref:REG},
+     {t:"Autorizar la salida con la correa atrapada; es solo una correa.", q:"bad", min:0, barrera:true,
+      fb:"Un tren no sale con una puerta sin confirmar cerrada. Además, el dueño de la mochila puede ser arrastrado.", rams:"La puntualidad nunca prevalece sobre la seguridad.", ref:REG}
+    ]},
+   {hora:"08:13", radio:"Estación cero-cuatro: \"Mochila retirada, puerta libre.\" La consola muestra la puerta cerrada.",
+    texto:"¿Cómo cierra el evento?",
+    ops:[
+     {t:"Confirmar en la consola que la puerta está cerrada, cancelar la retención, regular los trenes siguientes y registrar la novedad en el Registro Diario.", q:"best", min:1,
+      fb:"Confirma en el sistema, normaliza la línea y deja el evento registrado, aunque no haya sido una falla.", rams:"Todo evento se registra: así se ve si las mochilas atrapadas se repiten en una estación.", ref:REG},
+     {t:"Cancelar la retención y no registrar nada, porque no fue una falla del equipo.", q:"ok", min:1,
+      fb:"El servicio sigue bien, pero sin registro nadie sabrá si esto pasa seguido en E04.", rams:"Si no está registrado, no existe para el análisis.", ref:REG},
+     {t:"Retirar el tren del servicio para que mantenimiento revise la puerta.", q:"ok", min:12,
+      fb:"La puerta no tenía falla: retirar el tren es desproporcionado y cuesta muchos minutos.", rams:"La respuesta debe ser proporcional al problema.", ref:REG}
+    ]}
+  ],
+  reporte:{titulo:"Registro de la novedad en el Registro Diario", emisor:"Controlador de circulación (CCO)", hora:"08:10",
+   ubicaciones:["Estación E04 – vía 1","Estación E04 – vía 2","Estación E05 – vía 2","Entre E04 y E05 – vía 2"], ubicacion:"Estación E04 – vía 2",
+   categorias:["Novedad operativa","Incidente – alarma de fallo"], receptores:["Estación (personal de plataforma)","Controlador de Mantenimiento"], canales:["Radio TETRA"],
+   claves:["107","mochila","puerta","coche","retenc"]},
+  leccion:"No toda alarma es una falla. Mirar primero, resolver con el recurso más cercano y registrar: así una perturbación queda en pocos minutos y no se saca de servicio un equipo sano."
+ },
+
+ {id:"cot-mochila", rol:"cot", titulo:"Mochila atrapada en una puerta del tren",
+  resumen:"Hora punta. En E04 la cabina no confirma el cierre de puertas: hay una mochila atrapada.",
+  ref:REG,
+  contexto:"Hora punta de la mañana. Usted es el conductor a bordo (COT) del Tren uno-cero-siete (107), que circula en UTO. El tren va lleno.",
+  minBase:1,
+  pasos:[
+   {hora:"08:10", situ:"En E04, vía 2, la cabina no confirma «puertas cerradas». Por el monitor ve la correa de una mochila atrapada en la puerta 2 del coche 3.",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Informar al CCO con tren, estación, puerta y lo que ve, y pedir por megafonía al pasajero que no forcejee con la puerta.", q:"best", min:1,
+      fb:"El CCO sabe de inmediato qué pasa y el pasajero no empeora la situación.", rams:"Un reporte preciso acorta la respuesta.", ref:REG},
+     {t:"Mandar a cerrar las puertas varias veces seguidas para que la correa se suelte.", q:"bad", min:1, barrera:true,
+      fb:"Cerrar repetidamente sobre un objeto puede dañar la puerta o lastimar al pasajero que tira de la mochila.", rams:"Forzar un equipo no es una solución.", ref:REG},
+     {t:"Esperar instrucciones del CCO sin decir nada a los pasajeros.", q:"ok", min:2,
+      fb:"El CCO verá la alarma, pero usted tiene la información exacta y los pasajeros no saben qué pasa.", rams:"Lo que usted ve, el sistema no siempre lo ve.", ref:REG}
+    ]},
+   {hora:"08:12", radio:"CCO: \"Tren uno-cero-siete, la estación cero-cuatro retira la mochila. Mantenga el tren detenido. Confirme colación.\"",
+    texto:"La estación retira la mochila y la cabina confirma «puertas cerradas». ¿Qué hace?",
+    ops:[
+     {t:"Informar al CCO: \"Tren uno-cero-siete: puertas cerradas y confirmadas en estación cero-cuatro, vía dos.\" Espera la autorización y la colación para salir.", q:"best", min:1,
+      fb:"El CCO tiene el tren retenido: la salida se hace cuando él lo autoriza.", rams:"La retención es una barrera: se levanta con confirmación.", ref:REG},
+     {t:"Arrancar apenas la cabina confirma el cierre, para no perder más tiempo.", q:"bad", min:0, barrera:true,
+      fb:"El tren está retenido por el CCO. Salir sin su autorización rompe la coordinación.", rams:"Ningún minuto vale saltarse una autorización.", ref:REG},
+     {t:"Pedir que aíslen la puerta por si acaso.", q:"ok", min:3,
+      fb:"La puerta funciona: aislarla deja una puerta sana fuera de servicio y suma minutos.", rams:"Aislar un equipo sano también es perder disponibilidad.", ref:REG}
+    ]},
+   {hora:"08:13", texto:"El tren sale de E04. ¿Qué hace con los pasajeros y con la novedad?",
+    ops:[
+     {t:"Informar por megafonía el motivo del retraso y pedir no obstruir las puertas; al final del recorrido, confirmar la novedad al CCO para el registro.", q:"best", min:0,
+      fb:"Los pasajeros entienden lo que pasó y el evento queda trazado.", rams:"Informar también previene: menos puertas obstruidas, menos minutos perdidos.", ref:REG},
+     {t:"Seguir sin decir nada; ya se resolvió.", q:"ok", min:0,
+      fb:"El servicio sigue, pero se pierde la oportunidad de prevenir que se repita en la siguiente estación.", rams:"La información al pasajero también es una barrera.", ref:REG},
+     {t:"Regañar por megafonía al pasajero de la mochila.", q:"bad", min:0,
+      fb:"Señalar a un pasajero genera conflicto y no ayuda. El mensaje debe ser general y preventivo.", rams:"La comunicación con el pasajero debe ser clara y respetuosa.", ref:REG}
+    ]}
+  ],
+  reporte:{titulo:"Reporte de la novedad al CCO", emisor:"COT – Tren 107", hora:"08:10",
+   ubicaciones:["Estación E04 – vía 1","Estación E04 – vía 2","Estación E05 – vía 2","Entre E04 y E05 – vía 2"], ubicacion:"Estación E04 – vía 2",
+   categorias:["Novedad operativa","Incidente – alarma de fallo"], receptores:["CCO"], canales:["Radio TETRA"],
+   claves:["107","mochila","puerta","coche"]},
+  leccion:"Ante un objeto atrapado: reportar lo que ve, no forzar la puerta, salir solo con autorización del CCO e informar a los pasajeros. Así la perturbación no pasa de pocos minutos."
+ },
+
+ {id:"aux-mochila", rol:"aux", titulo:"Mochila atrapada en una puerta del tren",
+  resumen:"Hora punta. En el andén de E04, la mochila de un pasajero queda atrapada en la puerta del Tren 107.",
+  ref:REG,
+  contexto:"Hora punta de la mañana. Usted es Auxiliar de Estación (AUX) en la Estación E04, en el andén de la vía 2.",
+  minBase:1,
+  pasos:[
+   {hora:"08:10", situ:"El Tren 107 no sale. Ve a un pasajero en el andén tirando con fuerza de una mochila atrapada en la puerta 2 del coche 3.",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Acercarse, pedirle al pasajero que deje de tirar y avisar por radio: \"Estación cero-cuatro a control: mochila atrapada en puerta dos, coche tres, tren uno-cero-siete, vía dos.\"", q:"best", min:1,
+      fb:"Protege al pasajero y el CCO recibe la información exacta para coordinar.", rams:"Un reporte preciso es la mitad de la solución.", ref:REG},
+     {t:"Tratar de abrir la puerta con las manos para sacar la mochila.", q:"bad", min:1, barrera:true,
+      fb:"Forzar una puerta del tren puede lastimarlo a usted o dañar la puerta. La puerta se abre por orden del CCO o del conductor.", rams:"No se interviene un equipo por cuenta propia.", ref:REG},
+     {t:"Esperar a que el CCO o el conductor resuelvan.", q:"ok", min:2,
+      fb:"Usted es quien está al lado: si no reporta, el CCO tarda más en entender qué pasa.", rams:"Lo que usted ve, el CCO no siempre lo ve.", ref:REG}
+    ]},
+   {hora:"08:12", radio:"CCO: \"Estación cero-cuatro, el conductor abre la puerta; retire la mochila y confirme. Confirme colación.\"",
+    texto:"¿Cómo lo hace?",
+    ops:[
+     {t:"Colacionar, retirar la mochila cuando la puerta abra, alejar al pasajero de la línea de seguridad y confirmar: \"Estación cero-cuatro a control: mochila retirada, puerta libre.\"", q:"best", min:1,
+      fb:"Orden colacionada, tarea hecha y confirmada. El CCO puede liberar el tren.", rams:"Cerrar el ciclo de la comunicación es parte de la barrera.", ref:REG},
+     {t:"Retirar la mochila y hacerle señas al conductor para que salga.", q:"bad", min:0, barrera:true,
+      fb:"La salida la autoriza el CCO. Una seña no reemplaza la confirmación por radio.", rams:"Sin confirmación al CCO, la barrera queda incompleta.", ref:REG},
+     {t:"Retirar la mochila y volver a su puesto sin confirmar.", q:"ok", min:2,
+      fb:"El CCO no sabe que ya está resuelto y el tren sigue retenido.", rams:"Lo que no se confirma no se sabe.", ref:REG}
+    ]},
+   {hora:"08:14", texto:"El tren salió. ¿Cómo cierra?",
+    ops:[
+     {t:"Recordar a los pasajeros del andén no obstruir las puertas y reportar la novedad al JET para el Registro Diario.", q:"best", min:0,
+      fb:"Previene que se repita y deja el evento registrado.", rams:"Lo que no se registra no se aprende.", ref:REG},
+     {t:"No registrar nada; no fue una falla.", q:"ok", min:0,
+      fb:"Si esto pasa todos los días en E04, sin registros nadie lo sabrá.", rams:"Si no está registrado, no existe para el análisis.", ref:REG},
+     {t:"Retener la mochila del pasajero como sanción.", q:"bad", min:0,
+      fb:"No le corresponde y genera un conflicto. La mochila se devuelve.", rams:"El trato al pasajero también es parte del servicio.", ref:REG}
+    ]}
+  ],
+  reporte:{titulo:"Registro de la novedad en el Registro Diario", emisor:"Auxiliar de estación (AUX) – Estación E04", hora:"08:10",
+   ubicaciones:["Estación E04 – vía 1","Estación E04 – vía 2","Estación E05 – vía 2","Entre E04 y E05 – vía 2"], ubicacion:"Estación E04 – vía 2",
+   categorias:["Novedad operativa"], receptores:["Jefe de Estación de Turno (JET)","CCO"], canales:["Radio TETRA","Presencial"],
+   claves:["107","mochila","puerta","coche"]},
+  leccion:"El auxiliar es los ojos del CCO en el andén: proteger al pasajero, reportar lo que ve, actuar con la orden colacionada y confirmar. Así el tren sale en pocos minutos."
+ },
+ /* ============================================================
     CASOS DE LA SESIÓN 2 · "Los minutos que cuestan"
     El mismo evento (tren detenido por falla de tracción) visto desde los tres roles.
     Caso de formación: las acciones siguen las convenciones de los casos anteriores
@@ -455,7 +589,7 @@ var CASOS = [
   resumen:"El Tren 103 llega a la Estación E06 en modo degradado para evacuar a sus pasajeros.",
   ref:REG,
   contexto:"Hora punta de la mañana. Usted es Auxiliar de Estación (AUX) en la Estación E06. El andén de la vía 1 está lleno de pasajeros esperando el tren.",
-  minBase:0,
+  minBase:5, /* minutos que el evento ya llevaba cuando la estación recibe el aviso */
   pasos:[
    {hora:"07:47", radio:"CCO: \"Estación cero-seis, el tren uno-cero-tres llega a vía uno en modo degradado para evacuar a todos los pasajeros. Confirme colación.\"",
     texto:"¿Qué hace?",
@@ -501,5 +635,182 @@ var CASOS = [
    categorias:["Novedad operativa","Incidente – alarma de fallo"], receptores:["Jefe de Estación de Turno (JET)","CCO"], canales:["Radio TETRA","Presencial"],
    claves:["103","evacu","pasajeros","verific","coche"]},
   leccion:"En una evacuación: preparar el andén antes de que llegue el tren, impedir que suban pasajeros, verificar coche por coche que el tren queda vacío y registrar el evento con horas exactas."
+ },
+
+ /* ============================================================
+    TEMPORADA DE FALLAS · SESIÓN 2 · RONDA 3: EMERGENCIA (MÁS DE 30 MINUTOS)
+    Falla de la señalización entre E08 y E10, vista desde los tres roles.
+    minBase incluye el tiempo de reparación, que ninguna decisión del participante evita:
+    aun haciendo todo bien, la perturbación supera los 30 minutos. Lo que se controla es no empeorarla.
+    Caso de formación: debe validarse contra el reglamento vigente antes de usarse.
+    ============================================================ */
+ {id:"cco-senalizacion", rol:"cco", titulo:"Falla de señalización en un tramo",
+  resumen:"Hora punta. La señalización falla entre E08 y E10 y la reparación tomará más de media hora.",
+  ref:REG,
+  contexto:"Inicio de la hora punta de la mañana. Usted es el controlador de circulación de turno en el CCO. Varios trenes circulan en UTO hacia E10 por la vía 1.",
+  minBase:20,
+  pasos:[
+   {hora:"06:50", alarma:"ALARMA: pérdida de señalización en la zona entre E08 y E10, vía 1. El Tren 110 se detiene entre E08 y E09; el Tren 112 está en E08 y el Tren 114 llega a E07.",
+    texto:"¿Qué hace primero?",
+    ops:[
+     {t:"Retener los trenes que van a entrar a la zona, comunicarse con el conductor del Tren 110 para confirmar su estado y avisar de inmediato al Controlador de Mantenimiento y a las estaciones afectadas.", q:"best", min:2,
+      fb:"Protege la zona, sabe cómo está el tren detenido y pone a correr la reparación desde el primer minuto.", rams:"El reloj del contrato ya corre desde la alarma: avisar a mantenimiento de inmediato acorta todo lo demás.", ref:REG},
+     {t:"Esperar unos minutos a ver si la señalización se recupera sola antes de avisar a mantenimiento.", q:"ok", min:6,
+      fb:"Si no se recupera, esos minutos ya se perdieron y la reparación empieza más tarde.", rams:"Esperar sin actuar también cuesta minutos.", ref:REG},
+     {t:"Dejar que los trenes sigan entrando a la zona en UTO, porque el sistema los protege.", q:"bad", min:0, barrera:true,
+      fb:"En la zona sin señalización el sistema no está protegiendo a los trenes. Dejarlos entrar sin control rompe la barrera principal.", rams:"Sin señalización, la protección pasa a depender de sus órdenes.", ref:REG}
+    ]},
+   {hora:"06:55", radio:"Controlador de Mantenimiento: \"La reparación tomará por lo menos cuarenta minutos.\"",
+    texto:"¿Cómo mantiene el servicio?",
+    ops:[
+     {t:"Establecer operación degradada: autorizar a cada tren, uno a la vez, a pasar la zona en modo EM con colación y supervisión continua, ajustar el intervalo e informar a los pasajeros con tiempos reales.", q:"best", min:10,
+      fb:"El servicio sigue, más lento pero controlado. Un tren a la vez en la zona es la barrera que reemplaza a la señalización.", rams:"Disponibilidad reducida con seguridad, mejor que cero disponibilidad.", ref:REG},
+     {t:"Suspender el servicio en toda la línea hasta que termine la reparación.", q:"ok", min:30,
+      fb:"Es seguro, pero desproporcionado: el resto de la línea funciona y se pierden muchos minutos de servicio.", rams:"La respuesta debe ser proporcional al problema.", ref:REG},
+     {t:"Autorizar a varios trenes a entrar a la zona en modo EM al mismo tiempo para recuperar el intervalo.", q:"bad", min:5, barrera:true,
+      fb:"Varios trenes en modo manual en una zona sin protección es el escenario de la colisión de la línea 10 del Metro de Shanghái (2011).", rams:"Ningún intervalo justifica quitar la separación entre trenes.", ref:REG}
+    ]},
+   {hora:"07:10", radio:"JET de la estación cero-nueve: \"El andén de la vía uno está muy lleno, la gente está muy cerca de las puertas.\"",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Coordinar con la estación las medidas de control de acceso al andén según el procedimiento y mantener mensajes con tiempos reales en estaciones y trenes.", q:"best", min:3,
+      fb:"La aglomeración también es un peligro. La estación regula el acceso y los pasajeros saben cuánto esperar.", rams:"Una falla técnica puede crear un peligro distinto en otro lugar.", ref:REG},
+     {t:"Responder que no puede hacer nada hasta que termine la reparación.", q:"bad", min:5, barrera:true,
+      fb:"La estación necesita apoyo ahora: sin control de acceso, el andén lleno pone en riesgo a los pasajeros.", rams:"Gestionar la consecuencia es parte de gestionar la falla.", ref:REG},
+     {t:"Pedir a los conductores que pasen la zona más rápido para descongestionar.", q:"bad", min:0, barrera:true,
+      fb:"En modo EM la velocidad tiene un límite que no se negocia. Apurar a los conductores crea un riesgo mayor.", rams:"Los minutos se ganan bien, nunca saltando una barrera.", ref:REG}
+    ]},
+   {hora:"07:35", radio:"Controlador de Mantenimiento: \"Señalización reparada entre E08 y E10.\"",
+    texto:"¿Cómo vuelve a la operación normal?",
+    ops:[
+     {t:"Antes de normalizar, hacer pasar un tren de prueba sin pasajeros por la zona y confirmar que la señalización funciona; luego volver a la operación normal.", q:"best", min:5,
+      fb:"Se comprueba que la reparación funciona antes de volver a confiar en ella con pasajeros.", rams:"El Apéndice Técnico 10 prevé un tren de prueba antes de reanudar el servicio tras interrupciones de más de 30 minutos.", ref:"AT10"},
+     {t:"Volver de inmediato a la operación normal con los trenes llenos.", q:"bad", min:0, barrera:true,
+      fb:"Si la reparación no quedó bien, el primer tren con pasajeros lo descubre.", rams:"Una reparación no se da por buena sin verificarla.", ref:"AT10"},
+     {t:"Mantener la operación degradada el resto del día por precaución.", q:"ok", min:20,
+      fb:"Seguro, pero desproporcionado: la reparación se puede verificar con un tren de prueba.", rams:"La precaución sin verificación también cuesta disponibilidad.", ref:REG}
+    ]},
+   {hora:"07:45", texto:"La línea está normal. ¿Cómo cierra?",
+    ops:[
+     {t:"Registrar el evento en el Registro Diario con hora de inicio y fin, trenes afectados y medidas tomadas, e informar a su jefe: por su duración es una emergencia según el AT11 y requiere informe.", q:"best", min:0,
+      fb:"El evento queda trazado con lo necesario para el informe y el análisis.", rams:"Una perturbación de más de 30 minutos es una emergencia en el AT11 y se investiga.", ref:"AT11"},
+     {t:"Registrar el evento al final del turno con lo que recuerde.", q:"ok", min:0,
+      fb:"Al final del turno se pierden las horas exactas, y en una emergencia las horas son lo primero que se revisa.", rams:"Un reporte tardío es un reporte incorrecto.", ref:REG},
+     {t:"No registrarlo: mantenimiento ya tiene su orden de trabajo.", q:"bad", min:0,
+      fb:"La orden de mantenimiento no registra cómo se manejó la operación ni cuántos trenes y pasajeros se afectaron.", rams:"Cada rol registra lo que vio y lo que hizo.", ref:REG}
+    ]}
+  ],
+  reporte:{titulo:"Registro del evento en el Registro Diario", emisor:"Controlador de circulación (CCO)", hora:"06:50",
+   ubicaciones:["Entre E07 y E08 – vía 1","Entre E08 y E10 – vía 1","Entre E08 y E10 – vía 2","Estación E09 – vía 1"], ubicacion:"Entre E08 y E10 – vía 1",
+   categorias:["Incidente – alarma de fallo"], receptores:["Controlador de Mantenimiento"], canales:["Teléfono","Radio TETRA"],
+   claves:["senal","señal","110","EM","prueba"]},
+  leccion:"Cuando la falla es larga, los minutos de la reparación no se pueden evitar, pero sí los que se suman por esperar, por suspender todo o por un incidente nuevo. Avisar de inmediato, un tren a la vez en la zona, gestionar el andén y verificar antes de normalizar."
+ },
+
+ {id:"cot-senalizacion", rol:"cot", titulo:"Tren detenido por falla de señalización",
+  resumen:"Hora punta. Su tren se detiene entre E08 y E09 por una falla de señalización que durará más de media hora.",
+  ref:REG,
+  contexto:"Inicio de la hora punta de la mañana. Usted es el conductor a bordo (COT) del Tren uno-uno-cero (110), que circula en UTO por la vía 1 hacia E10. El tren va lleno.",
+  minBase:25,
+  pasos:[
+   {hora:"06:50", alarma:"El tren frena y se detiene entre E08 y E09, vía 1. La consola indica pérdida de señalización.",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Mantener el tren detenido, reportar al CCO con la estructura correcta (tren, ubicación, lo que indica la consola) e informar a los pasajeros.", q:"best", min:1,
+      fb:"El CCO confirma lo que ve en su pantalla y los pasajeros saben qué pasa.", rams:"Su reporte confirma la alarma y acelera las decisiones.", ref:REG},
+     {t:"Conmutar a modo EM por su cuenta y avanzar hasta E09 para dejar a los pasajeros en la estación.", q:"bad", min:0, barrera:true,
+      fb:"Sin señalización, el CCO es quien autoriza cada movimiento. Avanzar por su cuenta puede ponerlo en el camino de otro tren.", rams:"Ni degradar el modo ni moverse sin autorización.", ref:REG},
+     {t:"Esperar en silencio a que el CCO lo llame.", q:"ok", min:2,
+      fb:"El CCO ve la alarma, pero no sabe cómo está su tren ni sus pasajeros. Y ellos tampoco saben qué pasa.", rams:"Informar a tiempo también protege.", ref:REG}
+    ]},
+   {hora:"06:56", radio:"CCO: \"Tren uno-uno-cero, conmute a modo EM y circule hasta estación cero-nueve, vía uno. Confirme colación.\"",
+    texto:"¿Cómo responde y conduce?",
+    ops:[
+     {t:"\"Tren uno-uno-cero: conmuto a modo EM y circulo hasta estación cero-nueve, vía uno.\" Espera el \"Correcto\", conduce a máximo 25 km/h, atento a la vía, y se detiene en E09.", q:"best", min:4,
+      fb:"Colación completa, dentro del límite del modo EM y hasta donde fue autorizado.", rams:"Modo degradado: menos velocidad, más atención.", ref:REG},
+     {t:"Colacionar bien y, como la vía se ve libre, seguir hasta E10 sin detenerse en E09.", q:"bad", min:2, barrera:true,
+      fb:"La autorización era hasta E09. Pasar el límite autorizado es entrar a una zona que el CCO no le ha dado.", rams:"La autorización tiene un límite: cumplirlo es la barrera.", ref:REG},
+     {t:"\"Recibido\" y arrancar a 40 km/h para recuperar el tiempo.", q:"bad", min:2, barrera:true,
+      fb:"Sin colación y por encima del límite del modo EM. Sin señalización, su velocidad es la única protección.", rams:"Los minutos se ganan bien, nunca saltando una barrera.", ref:REG}
+    ]},
+   {hora:"07:05", situ:"Está en E09. El andén está lleno, los pasajeros se quejan por el interfono y el tren de adelante ya salió hacia E10.",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Informar a los pasajeros por megafonía con lo que le dijo el CCO, atender el interfono y esperar la autorización del CCO para el siguiente tramo.", q:"best", min:3,
+      fb:"Cada tramo necesita su autorización. Mientras tanto, los pasajeros informados se calman.", rams:"Un tren a la vez en la zona: la separación la da el CCO.", ref:REG},
+     {t:"Salir hacia E10 porque el tren de adelante ya salió.", q:"bad", min:0, barrera:true,
+      fb:"Usted no sabe dónde está el tren de adelante. Sin señalización, solo el CCO conoce la posición de los trenes.", rams:"Suponer que la vía está libre no es una autorización.", ref:REG},
+     {t:"No atender el interfono para concentrarse en la radio.", q:"ok", min:3,
+      fb:"La radio es la prioridad, pero un interfono sin atender puede ser una emergencia de un pasajero.", rams:"Cada llamada de un pasajero puede ser importante.", ref:REG}
+    ]},
+   {hora:"07:40", situ:"La señalización volvió y el servicio se normalizó. Su turno sigue.",
+    texto:"¿Cómo cierra su parte?",
+    ops:[
+     {t:"Reportar al CCO y al Capitán de Trenes lo que observó: hora en que se detuvo, ubicación exacta, mensajes de la consola y cualquier comportamiento raro del tren.", q:"best", min:0,
+      fb:"Lo que vio desde la cabina ayuda a mantenimiento a entender la falla.", rams:"Un reporte preciso acorta el análisis.", ref:REG},
+     {t:"No reportar nada: la falla fue de la señalización, no del tren.", q:"bad", min:0,
+      fb:"Usted fue testigo de cómo se manifestó la falla. Sin su información, el análisis tiene menos datos.", rams:"Cada rol registra lo que vio.", ref:REG},
+     {t:"Comentarlo con los compañeros en el cambio de turno.", q:"bad", min:0,
+      fb:"Un comentario no queda registrado ni llega al análisis.", rams:"Si no está registrado, no existe para el análisis.", ref:REG}
+    ]}
+  ],
+  reporte:{titulo:"Reporte de la novedad al CCO", emisor:"COT – Tren 110", hora:"06:50",
+   ubicaciones:["Entre E07 y E08 – vía 1","Entre E08 y E09 – vía 1","Estación E09 – vía 1","Entre E09 y E10 – vía 1"], ubicacion:"Entre E08 y E09 – vía 1",
+   categorias:["Incidente – alarma de fallo"], receptores:["CCO"], canales:["Radio TETRA"],
+   claves:["110","senal","señal","EM","E09"]},
+  leccion:"Sin señalización, cada movimiento lo autoriza el CCO: colación completa, 25 km/h en modo EM y detenerse donde termina la autorización. La presión de los pasajeros no cambia los límites."
+ },
+
+ {id:"aux-senalizacion", rol:"aux", titulo:"Andén lleno por una falla de señalización",
+  resumen:"Hora punta. Por una falla de señalización los trenes pasan muy espaciados y el andén de E09 se llena.",
+  ref:REG,
+  contexto:"Inicio de la hora punta de la mañana. Usted es Auxiliar de Estación (AUX) en la Estación E09, en el andén de la vía 1.",
+  minBase:25,
+  pasos:[
+   {hora:"06:52", radio:"CCO: \"Estación cero-nueve, falla de señalización entre E08 y E10; los trenes circularán con demoras. Informe a los pasajeros. Confirme colación.\"",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Colacionar, avisar al JET e informar a los pasajeros del andén y del vestíbulo con los tiempos que da el CCO.", q:"best", min:1,
+      fb:"Los pasajeros saben qué pasa antes de que el andén se llene, y algunos podrán buscar otra opción.", rams:"La información al pasajero también se mide en el contrato.", ref:REG},
+     {t:"Esperar a que el andén se llene para informar.", q:"ok", min:4,
+      fb:"Cuando el andén ya está lleno, informar es más difícil y llega tarde.", rams:"Lo que no se previene se paga en minutos.", ref:REG},
+     {t:"Responder \"OK, copiado\" y seguir con su tarea.", q:"bad", min:2, barrera:true,
+      fb:"Sin colación el CCO no sabe si entendió, y los pasajeros no reciben información.", rams:"Una orden sin colación es una barrera rota.", ref:REG}
+    ]},
+   {hora:"07:10", situ:"El andén de la vía 1 está muy lleno y algunas personas están muy cerca de las puertas de andén.",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Avisar al JET y al CCO, aplicar con el JET las medidas de control de acceso al andén según el procedimiento y mantener a la gente lejos de las puertas de andén.", q:"best", min:3,
+      fb:"Regular la entrada al andén evita que una demora se convierta en un accidente.", rams:"Una falla técnica puede crear un peligro distinto en otro lugar.", ref:REG},
+     {t:"Solo repetir mensajes por megafonía.", q:"ok", min:5,
+      fb:"La información ayuda, pero no basta para controlar un andén que sigue llenándose.", rams:"Informar es una barrera; controlar el acceso es otra.", ref:REG},
+     {t:"Dejar que siga entrando gente porque es hora punta.", q:"bad", min:5, barrera:true,
+      fb:"Un andén sobrepasado pone a los pasajeros en riesgo de caídas y empujones cerca de las puertas.", rams:"La seguridad de las personas va antes que el flujo.", ref:REG}
+    ]},
+   {hora:"07:20", situ:"Una pasajera se desmaya en medio del andén lleno.",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Avisar de inmediato al JET y al CCO, proteger a la pasajera abriendo espacio alrededor y pedir la atención según el procedimiento de primeros auxilios.", q:"best", min:2,
+      fb:"La persona recibe ayuda rápido y el CCO sabe que en E09 hay una emergencia mientras llegan los trenes.", rams:"Las personas primero, con orden.", ref:REG},
+     {t:"Seguir controlando la multitud y esperar que otro compañero la atienda.", q:"bad", min:5, barrera:true,
+      fb:"Nadie más sabe que la pasajera está en el piso. Cada minuto cuenta.", rams:"Lo que usted ve, nadie más lo sabe hasta que lo reporta.", ref:REG},
+     {t:"Levantarla y llevarla de inmediato al vestíbulo.", q:"ok", min:2,
+      fb:"Moverla sin evaluar puede empeorar su estado. Primero se protege y se pide atención.", rams:"Actuar rápido no es actuar sin método.", ref:REG}
+    ]},
+   {hora:"07:45", texto:"La línea se normalizó. ¿Cómo cierra el evento?",
+    ops:[
+     {t:"Informar a los pasajeros que el servicio se normalizó y registrar en el Registro Diario las horas, las medidas de control de acceso y la atención a la pasajera.", q:"best", min:0,
+      fb:"Queda trazado lo que pasó en la estación, que el CCO no vio.", rams:"Lo que no se registra no se aprende.", ref:REG},
+     {t:"No registrar nada: la falla fue de la señalización.", q:"bad", min:0,
+      fb:"La aglomeración y la atención a la pasajera ocurrieron en su estación. Nadie más puede registrarlas.", rams:"Cada rol registra lo que vio.", ref:REG},
+     {t:"Registrar solo la atención a la pasajera.", q:"ok", min:0,
+      fb:"Falta el control de acceso: es lo que muestra cómo una falla técnica afectó la estación.", rams:"El registro completo explica las consecuencias.", ref:REG}
+    ]}
+  ],
+  reporte:{titulo:"Registro del evento en el Registro Diario", emisor:"Auxiliar de estación (AUX) – Estación E09", hora:"06:52",
+   ubicaciones:["Estación E08 – vía 1","Estación E09 – vía 1","Estación E09 – vía 2","Estación E10 – vía 1"], ubicacion:"Estación E09 – vía 1",
+   categorias:["Novedad operativa","Incidente – alarma de fallo"], receptores:["Jefe de Estación de Turno (JET)","CCO"], canales:["Radio TETRA","Presencial"],
+   claves:["andén","anden","acceso","pasajer","senal","señal"]},
+  leccion:"Una falla técnica larga se vive en la estación como un andén lleno. Informar a tiempo, controlar el acceso, atender primero a las personas y registrar lo que solo usted vio."
  }
 ];

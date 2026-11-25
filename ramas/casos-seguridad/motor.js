@@ -2,7 +2,7 @@
 /* ============================================================
    ESTADO Y UTILIDADES
    ============================================================ */
-var S = {nombre:"", rol:null, caso:null, paso:0, minutos:0, barreras:3, respuestas:[], reporte:null, export:null};
+var S = {nombre:"", rol:null, caso:null, paso:0, minutos:0, minContrato:0, barreras:3, respuestas:[], reporte:null, export:null};
 var app = document.getElementById("app");
 
 function h(tag, attrs, children){
@@ -82,6 +82,7 @@ function renderLista(wrap, nombreInput){
 function iniciarCaso(id){
   S.caso = id; S.paso = 0; S.barreras = 3; S.respuestas = []; S.reporte = null; S.export = null;
   S.minutos = casoActual().minBase;
+  S.minContrato = casoActual().minBase; /* reloj del contrato (AT11): desde el reporte o la alarma */
   var c = casoActual(); app.innerHTML = ""; irArriba();
   app.appendChild(h("section", {class:"stack"}, [
     h("p", {class:"eyebrow", text:ROLES[c.rol].nombre + " · " + c.ref}),
@@ -128,6 +129,8 @@ function elegir(i){
   var c = casoActual(), p = c.pasos[S.paso], o = p.ops[i];
   var bi = p.ops.map(function(x){ return x.q; }).indexOf("best");
   S.minutos += o.min; if(o.barrera && S.barreras > 0) S.barreras--;
+  /* reloj:false = minutos que pasan antes de que alguien reporte: los sufre el pasajero, pero el contrato aún no los cuenta */
+  if(o.reloj !== false) S.minContrato += o.min;
   S.respuestas.push({hora:p.hora, pregunta:p.texto, elegida:o.t, calidad:o.q, mejor:p.ops[bi].t, ref:o.ref});
   Array.prototype.forEach.call(document.getElementById("opts").children, function(b, idx){
     b.disabled = true;
@@ -137,6 +140,7 @@ function elegir(i){
   var efectos = [];
   if(o.barrera) efectos.push("Se perdió una barrera de seguridad.");
   if(o.min) efectos.push("Sumó " + o.min + " min de servicio perdido.");
+  if(o.min && o.reloj === false) efectos.push("El contrato aún no cuenta estos minutos porque nadie había reportado, pero el pasajero sí los sufrió.");
   var fb = document.getElementById("fb"); fb.innerHTML = "";
   fb.appendChild(h("div", {class:"fb " + o.q}, [
     h("span", {class:"h", text:titulo}), h("span", {text:o.fb + (efectos.length ? " " + efectos.join(" ") : "")}),
@@ -237,7 +241,9 @@ function pantallaResultado(){
       h("div", {class:"part"}, [h("div", {class:"muted", text:"Decisiones"}), h("div", {class:"pv", text:P.dec + " / 40"})]),
       h("div", {class:"part"}, [h("div", {class:"muted", text:"Barreras conservadas"}), h("div", {class:"pv", text:P.bar + " / 30"})]),
       h("div", {class:"part"}, [h("div", {class:"muted", text:"Registro"}), h("div", {class:"pv", text:P.rep + " / 30"})])]),
-    h("p", null, [h("strong", {text:"Servicio perdido: " + S.minutos + " min. "}), document.createTextNode("Según el AT11, corresponde a una " + categoriaAT11(S.minutos).toLowerCase() + ".")]),
+    h("p", null, [h("strong", {text:"Servicio perdido para el pasajero: " + S.minutos + " min. "}),
+      document.createTextNode("Tiempo que mide el contrato (desde el reporte o la alarma): " + S.minContrato + " min. Según el AT11, corresponde a una " + categoriaAT11(S.minContrato).toLowerCase() + ".")]),
+    S.minutos > S.minContrato ? h("p", {class:"muted", text:"Reportar tarde no acorta la perturbación: solo retrasa la respuesta. Los minutos antes del reporte los pierde igual el pasajero."}) : null,
     h("div", {class:"lesson"}, [h("strong", {text:"Lo que debe llevarse: "}), document.createTextNode(c.leccion)]),
     h("h3", {text:"Sus decisiones"}),
     h("div", {class:"tablewrap"}, [h("table", null, [h("thead", null, [h("tr", null, [h("th", {text:"#"}), h("th", {text:"Lo que eligió"}), h("th", {text:"La mejor opción"})])]), tb])]),
@@ -255,10 +261,11 @@ function datosResultado(P){
   var c = casoActual(), d = new Date();
   var f = d.getFullYear() + "/" + String(d.getMonth() + 1).padStart(2, "0") + "/" + String(d.getDate()).padStart(2, "0") + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
   var enc = ["Fecha de la práctica","Nombre","Especialidad del caso","Caso","Puntaje total","Decisiones (40)","Barreras (30)","Registro (30)","Minutos perdidos","Categoría AT11"];
-  var fila = [f, S.nombre, ROLES[c.rol].nombre, c.titulo, P.total, P.dec, P.bar, P.rep, S.minutos, categoriaAT11(S.minutos)];
+  var fila = [f, S.nombre, ROLES[c.rol].nombre, c.titulo, P.total, P.dec, P.bar, P.rep, S.minutos, categoriaAT11(S.minContrato)];
   S.respuestas.forEach(function(x, i){ enc.push("Decisión " + (i + 1)); fila.push((x.calidad === "best" ? "Buena" : (x.calidad === "ok" ? "Mejorable" : "De riesgo")) + ": " + x.elegida); });
   S.reporte.checks.forEach(function(k){ enc.push("Registro - " + k.n); fila.push(k.ok ? "Bien" : "Falta"); });
   enc.push("Registro - contenido"); fila.push(S.reporte.valores.contenido);
+  enc.push("Minutos que mide el contrato (AT11)"); fila.push(S.minContrato);
   return {enc:enc, fila:fila};
 }
 function enviarASheets(P, msgS){

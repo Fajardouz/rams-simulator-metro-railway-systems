@@ -8,9 +8,9 @@
    ============================================================ */
 (function(){
   var T = window.TALLER, h = Comun.h, app = document.getElementById("app");
-  var S = {nombre: Comun.getNombre(), rol: null, R: null, hechos: [], acciones: [], enviado: false};
+  var S = {nombre: Comun.getNombre(), rol: null, R: null, hechos: [], acciones: [], intentos: [], ultimo: null, enviados: 0};
   var ENC = ["Fecha","Nombre","Especialidad","Relato","Puntaje (0-100)","Cuándo: fecha","Cuándo: hora","Dónde","Qué equipo",
-             "Qué pasó: hechos marcados","Qué pasó: suposiciones marcadas","Qué se hizo","Cuánto afectó","¿Se repite?","Desenlace"];
+             "Qué pasó: hechos marcados","Qué pasó: suposiciones marcadas","Qué se hizo","Cuánto afectó","¿Se repite?","Desenlace","Intento"];
 
   var PESOS = {fecha:10, hora:10, ubicacion:15, equipo:15, hechos:20, acciones:10, efecto:10, repeticion:10};
   var CONSEC = {
@@ -82,7 +82,7 @@
   }
 
   function empezar(r){
-    S.R = r; S.enviado = false;
+    S.R = r; S.intentos = []; S.ultimo = null; S.enviados = 0;
     S.hechos = Comun.mezclar(r.hechos); S.acciones = Comun.mezclar(r.acciones);
     relato();
   }
@@ -157,6 +157,14 @@
       aviso,
       h("div", {class:"row"}, [h("span"), b])
     ]));
+    if(S.ultimo) rellenar(S.ultimo);
+  }
+  /* Segundo intento: el formulario vuelve con lo que el participante escribió antes */
+  function rellenar(r){
+    document.getElementById("r_fecha").value = r.fecha; document.getElementById("r_hora").value = r.hora;
+    ["ubicacion","equipo","efecto","repeticion"].forEach(function(c){ document.getElementById("r_" + c).value = r[c]; });
+    r.hechos.forEach(function(x){ var i = S.hechos.indexOf(x); if(i >= 0) document.getElementById("h_" + i).checked = true; });
+    r.acciones.forEach(function(x){ var i = S.acciones.indexOf(x); if(i >= 0) document.getElementById("a_" + i).checked = true; });
   }
   function marcados(sel, items){
     var r = []; Array.prototype.forEach.call(app.querySelectorAll(sel + " input:checked"), function(i){ r.push(items[Number(i.value)]); });
@@ -225,7 +233,9 @@
     });
 
     var msg = h("p", {class:"muted", "aria-live":"polite"});
-    var bRep = h("button", {type:"button", class:"btn ghost", text:"Intentar otra vez"}); bRep.addEventListener("click", function(){ empezar(R); });
+    S.ultimo = r; S.intentos.push(k.pts);
+    var bCorr = h("button", {type:"button", class:"btn", text:"Corregir mi reporte"}); bCorr.addEventListener("click", formulario);
+    var bRep = h("button", {type:"button", class:"btn ghost", text:"Empezar de nuevo"}); bRep.addEventListener("click", function(){ empezar(R); });
     var bIni = h("button", {type:"button", class:"btn ghost", text:"Elegir otro relato"}); bIni.addEventListener("click", inicio);
     app.appendChild(h("section", {class:"stack"}, [
       h("div", {class:"eyebrow", text:"Paso 3 de 3 · Resultado · " + R.titulo}),
@@ -244,16 +254,17 @@
       notas.childNodes.length ? h("h3", {text:"Revise estas afirmaciones"}) : null,
       notas,
       h("div", {class:"lesson"}, [h("strong", {text:"Para llevarse: "}), document.createTextNode(T.leccion)]),
-      h("div", {class:"row"}, [h("div", {class:"row"}, [bRep, bIni]), h("a", {class:"btn", href:"../../index.html", text:"Volver al inicio"})]),
+      S.intentos.length > 1 ? h("p", {class:"muted", text:"Sus intentos: " + S.intentos.map(function(p, i){ return "intento " + (i + 1) + ": " + p + "/100"; }).join(" → ") + "."}) : h("p", {class:"muted", text:"Revise la retroalimentación y corrija su reporte: verá cómo cambia lo que mantenimiento puede hacer con él."}),
+      h("div", {class:"row"}, [h("div", {class:"row"}, [bRep, bIni]), h("div", {class:"row"}, [bCorr, h("a", {class:"btn ghost", href:"../../index.html", text:"Volver al inicio"})])]),
       msg
     ]));
 
-    if(S.enviado){ msg.textContent = "✔ Resultado ya registrado."; return; }
-    S.enviado = true;
+    if(S.enviados >= S.intentos.length){ msg.textContent = "✔ Resultado ya registrado."; return; }
+    S.enviados = S.intentos.length;
     var si = function(v){ return v >= 0.999 ? "Sí" : v > 0 ? "Parcial" : "No"; };
     var fila2 = [Comun.fecha(), S.nombre, T.ROLES[R.rol].nombre, R.titulo, k.pts,
       si(c.fecha) + " (" + (r.fecha || "") + ")", si(c.hora) + " (" + r.hora + ")", si(c.ubicacion), si(c.equipo),
-      k.hOk + " de " + k.nHechos, k.sup, si(c.acciones), si(c.efecto), si(c.repeticion), bueno ? "Bueno" : "La falla volvió"];
+      k.hOk + " de " + k.nHechos, k.sup, si(c.acciones), si(c.efecto), si(c.repeticion), bueno ? "Bueno" : "La falla volvió", S.intentos.length];
     Comun.enviar(T.actividad, T.titulo, ENC, fila2, msg);
   }
 

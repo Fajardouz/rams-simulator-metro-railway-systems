@@ -138,6 +138,106 @@ var TALLER = {
      repeticion:{ops:["Es la primera vez","Según un compañero, también se detuvo el día anterior","Pasa todas las semanas","No se sabe"], ok:"Según un compañero, también se detuvo el día anterior"},
      desenlaceMalo:"Mantenimiento recibe «escalera de E05 parada». El técnico llega, no sabe cuál de las escaleras es, ni que hubo olor a quemado ni que ya había fallado. La rearma, funciona y cierra la orden. Al día siguiente vuelve a detenerse en hora punta. (Desenlace hipotético.)",
      desenlaceBueno:"Con la escalera exacta, la hora, el golpe y el olor que reportó el pasajero, y la falla del día anterior, el técnico no la pone en marcha sin revisar. Encuentra un componente dañado, lo cambia y deja registrada la causa. La disponibilidad de la escalera se recupera sin una segunda parada en hora punta. (Desenlace hipotético.)"
+    },
+    {id:"cco-ascensor", rol:"cco", titulo:"Pasajera atrapada en un ascensor",
+     resumen:"Un ascensor se detiene entre pisos con una pasajera adentro. Tres personas le dan datos distintos.",
+     relato:[
+       {hora:"14:05", texto:"Entra una llamada del interfono del ascensor 1 de la Estación E10. Una pasajera dice que el ascensor «dio un sacudón y se paró» entre el vestíbulo y el andén de la vía 2."},
+       {hora:"14:06", texto:"Usted la tranquiliza, confirma que está sola y que se siente bien, e informa al JET de E10 y al Controlador de Mantenimiento."},
+       {hora:"14:15", texto:"El JET de E10 le dice por radio: «Ese ascensor ya se paró la semana pasada, pero esa vez arrancó solo»."},
+       {hora:"14:22", texto:"El técnico de mantenimiento llega, rescata a la pasajera según el procedimiento y deja el ascensor fuera de servicio. Dice que el ascensor está nivelado y que no ve nada raro a simple vista."},
+       {hora:"14:30", texto:"La pasajera sale bien, sin lesiones. Usted va a registrar el evento."}
+     ],
+     fecha:"2027/04/20", hora:"14:05",
+     ubicacion:{ops:["E10 · vestíbulo","E10 · entre el vestíbulo y el andén de la vía 2","E10 · andén vía 1","E09 · vestíbulo"], ok:"E10 · entre el vestíbulo y el andén de la vía 2"},
+     equipo:{ops:["Ascensor","Ascensor 1","Ascensor 2","Escalera 1"], ok:"Ascensor 1"},
+     hechos:[
+       {t:"El ascensor se detuvo entre pisos con una pasajera adentro a las 14:05", tipo:"hecho", fb:"Es el síntoma y la hora de inicio."},
+       {t:"La pasajera dijo que el ascensor dio un sacudón antes de detenerse", tipo:"hecho", fb:"Es lo que dijo la pasajera. Se reporta indicando que lo dijo ella."},
+       {t:"Según el JET, el ascensor ya se había detenido la semana pasada y arrancó solo", tipo:"hecho", fb:"Dice que la falla viene de antes, aunque no se haya reportado."},
+       {t:"El técnico rescató a la pasajera a las 14:22, sin lesiones", tipo:"hecho", fb:"Dice cuánto duró el evento y que no hubo lesionados."},
+       {t:"El técnico no vio nada raro a simple vista", tipo:"hecho", fb:"También es un dato: indica que la falla no es evidente y hay que buscarla."},
+       {t:"El ascensor tiene un problema eléctrico", tipo:"suposicion", fb:"Nadie lo comprobó. Es un diagnóstico que le corresponde a mantenimiento."},
+       {t:"La pasajera seguramente se recostó en la puerta", tipo:"suposicion", fb:"Nadie lo vio. Además, culpar al pasajero sin evidencia desvía el análisis."},
+       {t:"El interfono del ascensor tenía buen sonido", tipo:"irrelevante", fb:"Es cierto, pero no ayuda a analizar por qué se detuvo el ascensor."}
+     ],
+     acciones:[
+       {t:"Se atendió a la pasajera por el interfono y se confirmó que estaba bien", ok:true},
+       {t:"Se informó al JET de E10 y al Controlador de Mantenimiento", ok:true},
+       {t:"Mantenimiento rescató a la pasajera y dejó el ascensor fuera de servicio", ok:true},
+       {t:"Se ordenó reiniciar el ascensor a distancia para liberar a la pasajera", ok:false}
+     ],
+     efecto:{ops:["Sin efecto en el servicio","Pasajera atrapada 17 minutos, sin lesiones; ascensor fuera de servicio","Ascensor detenido 5 minutos","Estación cerrada"], ok:"Pasajera atrapada 17 minutos, sin lesiones; ascensor fuera de servicio"},
+     repeticion:{ops:["Es la primera vez","Según el JET, ya se había detenido la semana pasada","Pasa todos los días","No se sabe"], ok:"Según el JET, ya se había detenido la semana pasada"},
+     desenlaceMalo:"Mantenimiento recibe «ascensor de E10 detenido, pasajera rescatada». El técnico lo revisa, no encuentra nada y lo pone en servicio. La parada de la semana anterior nunca se une a esta. Diez días después vuelve a detenerse con dos personas adentro. (Desenlace hipotético.)",
+     desenlaceBueno:"Con el sacudón, la parada de la semana anterior y la hora exacta, mantenimiento revisa los registros del ascensor en esos dos momentos y encuentra el componente que fallaba de forma intermitente. Lo cambia antes de volver a ponerlo en servicio. (Desenlace hipotético.)"
+    },
+
+    {id:"cot-olor", rol:"cot", titulo:"Olor a quemado en un coche",
+     resumen:"Los pasajeros avisan de olor a quemado en un coche. Unos dicen que hay humo; usted no lo ve.",
+     relato:[
+       {hora:"18:05", texto:"Entre E09 y E10, vía 2, un pasajero llama por el interfono del coche 4 del Tren 111: «Huele a quemado y creo que hay humo»."},
+       {hora:"18:06", texto:"Usted informa de inmediato al CCO. Por la cámara del coche 4 no ve humo. Los indicadores de la cabina están normales."},
+       {hora:"18:07", texto:"Llega a E10. Por orden del CCO se desaloja el coche 4. El auxiliar de E10 entra al coche: percibe olor a quemado cerca de las puertas del lado izquierdo, pero no ve humo."},
+       {hora:"18:15", texto:"Por orden del CCO el tren sale de servicio sin pasajeros hacia el patio. Los pasajeros continúan en el tren siguiente."},
+       {hora:"18:40", texto:"Va a registrar la novedad."}
+     ],
+     fecha:"2027/04/20", hora:"18:05",
+     ubicacion:{ops:["E09 · vía 2","Entre E09 y E10 · vía 2","E10 · vía 2","Entre E09 y E10 · vía 1"], ok:"Entre E09 y E10 · vía 2"},
+     equipo:{ops:["Tren 111","Tren 111 · coche 4","Tren 111 · coche 4 · cerca de las puertas del lado izquierdo","Tren 112 · coche 4"], ok:"Tren 111 · coche 4 · cerca de las puertas del lado izquierdo"},
+     hechos:[
+       {t:"Un pasajero avisó por el interfono de olor a quemado y posible humo en el coche 4", tipo:"hecho", fb:"Es lo que dijo el pasajero. Se reporta indicando que lo dijo él."},
+       {t:"Por cámara no se vio humo y los indicadores de la cabina estaban normales", tipo:"hecho", fb:"Es lo que usted observó: ayuda a valorar el aviso del pasajero."},
+       {t:"El auxiliar de E10 percibió olor a quemado cerca de las puertas del lado izquierdo del coche 4, sin humo", tipo:"hecho", fb:"Confirma el olor y dice dónde. Es la pista más útil para el técnico."},
+       {t:"Se quemó un motor de puerta", tipo:"suposicion", fb:"Nadie lo comprobó. Es un diagnóstico que le corresponde a mantenimiento."},
+       {t:"Había humo en el coche", tipo:"suposicion", fb:"Nadie lo confirmó: el pasajero dijo «creo», la cámara no lo mostró y el auxiliar no lo vio. Reportarlo como hecho exagera el evento."},
+       {t:"El tren venía lleno por la hora punta", tipo:"irrelevante", fb:"Es cierto, pero no ayuda a encontrar el origen del olor."}
+     ],
+     acciones:[
+       {t:"Se informó al CCO de inmediato", ok:true},
+       {t:"Se desalojó el coche 4 en E10 por orden del CCO", ok:true},
+       {t:"El tren salió de servicio sin pasajeros hacia el patio", ok:true},
+       {t:"Se abrió el panel de las puertas para buscar el origen del olor", ok:false}
+     ],
+     efecto:{ops:["Sin efecto en el servicio","Tren retirado del servicio en E10; los pasajeros continuaron en el tren siguiente","Retraso de 1 minuto","Línea suspendida"], ok:"Tren retirado del servicio en E10; los pasajeros continuaron en el tren siguiente"},
+     repeticion:{ops:["Es la primera vez","Se repitió en el mismo recorrido","Pasa todos los días","No se sabe"], ok:"No se sabe"},
+     consecuencias:{repeticion:"Cuando no hay información de eventos anteriores, lo correcto es decir «no se sabe». Inventar una repetición o asegurar que es la primera vez también desvía el análisis."},
+     desenlaceMalo:"Mantenimiento recibe «humo en el Tren 111». Revisa todo el tren buscando un incendio y no encuentra nada. Nadie revisa en particular las puertas del lado izquierdo del coche 4. (Desenlace hipotético.)",
+     desenlaceBueno:"Con el coche, el lado y la diferencia entre lo que dijo el pasajero y lo que se observó, el técnico va directo a las puertas del lado izquierdo del coche 4 y encuentra un componente recalentado. (Desenlace hipotético.)"
+    },
+
+    {id:"aux-caida", rol:"aux", titulo:"Pasajero que se cae en la escalera",
+     resumen:"Un pasajero se cae en la escalera eléctrica. Él dice que la escalera dio un tirón; otro pasajero dice que se tropezó.",
+     relato:[
+       {hora:"07:20", texto:"En la Estación E03, un pasajero se cae en la escalera eléctrica 1 (vestíbulo → andén de la vía 1, en bajada). Usted lo ve ya en el suelo al final de la escalera."},
+       {hora:"07:21", texto:"Detiene la escalera con el pulsador de parada según el procedimiento, informa al JET y atiende al pasajero: tiene un golpe en la rodilla, puede caminar."},
+       {hora:"07:23", texto:"El pasajero dice: «La escalera dio un tirón y me caí». Otra pasajera que venía detrás le dice a usted: «Yo vi que se tropezó con su maleta»."},
+       {hora:"07:35", texto:"El pasajero recibe atención según el procedimiento y decide seguir su viaje. Mantenimiento revisa la escalera y la vuelve a poner en servicio a las 08:10."},
+       {hora:"08:15", texto:"Va a registrar el evento."}
+     ],
+     fecha:"2027/04/20", hora:"07:20",
+     ubicacion:{ops:["E03","E03 · vestíbulo → andén vía 1","E03 · andén vía 1 → vestíbulo","E03 · vestíbulo → calle"], ok:"E03 · vestíbulo → andén vía 1"},
+     equipo:{ops:["Escalera eléctrica","Escalera eléctrica 1","Escalera eléctrica 2","Escalera fija"], ok:"Escalera eléctrica 1"},
+     hechos:[
+       {t:"Un pasajero se cayó en la escalera 1, en bajada, a las 07:20", tipo:"hecho", fb:"Es el evento, con la hora y el sentido de la escalera."},
+       {t:"El pasajero tiene un golpe en la rodilla y puede caminar", tipo:"hecho", fb:"Dice cuál fue la lesión."},
+       {t:"El pasajero dijo que la escalera dio un tirón", tipo:"hecho", fb:"Es su versión. Se reporta diciendo que la dio él."},
+       {t:"Otra pasajera dijo que vio que se tropezó con su maleta", tipo:"hecho", fb:"Es otra versión, de un testigo. Las dos se reportan: decidir cuál es cierta le corresponde a quien investiga."},
+       {t:"Usted no vio el momento de la caída", tipo:"hecho", fb:"Es importante decirlo: así nadie confunde lo que le contaron con lo que usted vio."},
+       {t:"La escalera dio un tirón", tipo:"suposicion", fb:"Es la versión del pasajero, no un hecho comprobado. Reportarla como hecho descarta la otra versión."},
+       {t:"El pasajero se tropezó por ir distraído", tipo:"suposicion", fb:"Nadie dijo que iba distraído. Es una culpa sin evidencia."}
+     ],
+     acciones:[
+       {t:"Se detuvo la escalera con el pulsador de parada según el procedimiento", ok:true},
+       {t:"Se informó al JET y se atendió al pasajero", ok:true},
+       {t:"Mantenimiento revisó la escalera y la puso en servicio a las 08:10", ok:true},
+       {t:"Se tomó el nombre y el teléfono de la testigo", ok:false}
+     ],
+     efecto:{ops:["Sin efecto en el servicio","Un pasajero con lesión leve; escalera 1 fuera de servicio de 07:21 a 08:10","Escalera detenida 5 minutos","Estación cerrada"], ok:"Un pasajero con lesión leve; escalera 1 fuera de servicio de 07:21 a 08:10"},
+     repeticion:{ops:["Es la primera vez","Se repitió en el mismo turno","Pasa todos los días","No se sabe"], ok:"No se sabe"},
+     consecuencias:{repeticion:"Nadie dio información de eventos anteriores: lo correcto es «no se sabe». Mantenimiento lo revisará en el historial de la escalera.", acciones:"Marque solo lo que se hizo según el relato. Tomar los datos de la testigo podría ser útil, pero el relato no dice que se hiciera."},
+     desenlaceMalo:"El reporte dice «la escalera dio un tirón y un pasajero se cayó». Mantenimiento revisa la escalera buscando una falla que tal vez no existe, y nadie revisa si hace falta mejorar la información sobre el uso de la escalera con equipaje. (Desenlace hipotético.)",
+     desenlaceBueno:"Con las dos versiones bien atribuidas, mantenimiento revisa los registros de la escalera a las 07:20 y no encuentra ninguna anomalía. El análisis concluye que fue un tropiezo con equipaje, y se refuerza la señalización sobre el uso de las escaleras con maletas. (Desenlace hipotético.)"
     }
 
   ]

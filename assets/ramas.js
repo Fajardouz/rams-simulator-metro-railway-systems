@@ -11,7 +11,9 @@ var RAMAS = [
   {carpeta:"ramas/casos-seguridad", titulo:"Casos aplicados de seguridad",       descripcion:"Usted toma las decisiones en una situación de operación y ve sus consecuencias en minutos, barreras y registro."},
   {carpeta:"ramas/fracas",          titulo:"Reportes de falla (FRACAS)",         descripcion:"Cómo se reporta, analiza y cierra una falla: pasos del ciclo FRACAS y un reporte real para corregir."},
   {carpeta:"ramas/detective",       titulo:"Detective de fallas",                descripcion:"Busque la falla que se repite en los reportes de dos semanas y descubra por qué solo aparece cuando los reportes traen datos."},
-  {carpeta:"ramas/taller-reporte",  titulo:"Taller de reporte",                  descripcion:"Lea lo que pasó en su turno, diligencie el reporte de la falla y vea qué puede hacer mantenimiento con lo que usted escribió."}
+  {carpeta:"ramas/taller-reporte",  titulo:"Taller de reporte",                  descripcion:"Lea lo que pasó en su turno, diligencie el reporte de la falla y vea qué puede hacer mantenimiento con lo que usted escribió."},
+  {carpeta:"ramas/reportar",        titulo:"¿Esto se reporta?",                  descripcion:"Situaciones de todos los días: decida si son una falla, un incidente o un cuasi-incidente, y a quién se reportan."},
+  {carpeta:"ramas/viaje-reporte",   titulo:"El viaje del reporte",               descripcion:"Siga un reporte desde que lo escribe hasta que cambia algo en el sistema, con un reporte bueno y uno malo."}
 ];
 
 /* ============================================================
@@ -43,7 +45,11 @@ var SESIONES = [
    ]},
   {n:5, titulo:"Después del reporte", tema:"Reporte de fallas y cuasi-incidentes, ciclo de mejora y control de cambios.",
    actividades:[
-     {titulo:"Taller de reporte", descripcion:"Diligencie el reporte de una falla de su turno y vea qué puede hacer mantenimiento con él.", href:"ramas/taller-reporte/index.html"}
+     {titulo:"Taller de reporte", descripcion:"Diligencie el reporte de una falla de su turno, compárelo con el modelo y corríjalo.", href:"ramas/taller-reporte/index.html"},
+     {titulo:"El viaje del reporte", descripcion:"Ordene el circuito del reporte y siga un evento por cada etapa, con un reporte bueno y uno malo.", href:"ramas/viaje-reporte/index.html"},
+     {titulo:"¿Esto se reporta?", descripcion:"Falla, incidente o cuasi-incidente: decida qué es cada situación y a quién se reporta. Incluye errores propios.", href:"ramas/reportar/index.html"},
+     {titulo:"El ajuste inocente", descripcion:"Un cambio que parece menor puede anular una protección. Decida qué hacer en su puesto.", href:"ramas/casos-seguridad/index.html?ver=cco-ajuste,cot-ajuste,aux-ajuste"},
+     {titulo:"Quiz de cierre", descripcion:"Diez situaciones para repasar la sesión.", href:"ramas/teoria/index.html?ver=quiz-sesion5"}
    ]},
   {n:6, titulo:"Caso integrador y evaluación", tema:"Simulador de casos de la especialidad, caso integrador y evaluación final.",
    actividades:[

@@ -812,5 +812,170 @@ var CASOS = [
    categorias:["Novedad operativa","Incidente – alarma de fallo"], receptores:["Jefe de Estación de Turno (JET)","CCO"], canales:["Radio TETRA","Presencial"],
    claves:["andén","anden","acceso","pasajer","senal","señal"]},
   leccion:"Una falla técnica larga se vive en la estación como un andén lleno. Informar a tiempo, controlar el acceso, atender primero a las personas y registrar lo que solo usted vio."
+ },
+
+ /* ============================================================
+    SESIÓN 5 · EL AJUSTE INOCENTE (control de cambios)
+    Un cambio que parece menor y razonable anula una protección.
+    Casos de formación: deben validarse contra el reglamento y el procedimiento
+    de gestión de cambios vigentes antes de usarse.
+    ============================================================ */
+ {id:"cco-ajuste", rol:"cco", titulo:"El ajuste inocente: la alarma que siempre suena",
+  resumen:"Un detector de humo da falsas alarmas varias veces por semana. Un compañero propone inhibirlo «mientras lo arreglan».",
+  ref:REG,
+  contexto:"Turno de la noche. Usted es controlador en el CCO. El detector de humo del andén de la vía 1 de la Estación E02 lleva dos semanas dando falsas alarmas, casi siempre durante la limpieza.",
+  minBase:0,
+  pasos:[
+   {hora:"22:40", alarma:"ALARMA: detector de humo, Estación E02, andén vía 1.",
+    texto:"Su compañero le dice: «Otra vez ese detector. Inhíbelo en el sistema hasta que lo arreglen; todos lo hacen». ¿Qué hace?",
+    ops:[
+     {t:"Atender la alarma como siempre: verificar con la estación y por cámara, y no inhibir el detector.", q:"best", min:0,
+      fb:"Cada alarma se verifica. La única forma de saber que esta vez también es falsa es comprobarlo.", rams:"Una protección que se desactiva «por molesta» deja de proteger justo el día que hace falta.", ref:REG},
+     {t:"Atenderla, pero sin llamar a la estación: seguro es la limpieza otra vez.", q:"ok", min:0,
+      fb:"No inhibió el detector, pero dejó de verificar. Acostumbrarse a una alarma es una forma silenciosa de desactivarla.", rams:"La normalización de las fallas erosiona las barreras.", ref:REG},
+     {t:"Inhibir la zona del detector hasta que mantenimiento lo repare.", q:"bad", min:0, barrera:true,
+      fb:"Inhibir un detector es un cambio en la configuración de un sistema de seguridad. Sin autorización, nadie sabe que esa zona quedó sin protección.", rams:"Un cambio sin control puede crear un peligro nuevo.", ref:REG}
+    ]},
+   {hora:"22:45", radio:"Estación cero-dos: \"Confirmado, es polvo por la limpieza. No hay humo ni fuego.\"",
+    texto:"La alarma fue falsa otra vez. ¿Qué hace para que el problema se resuelva de verdad?",
+    ops:[
+     {t:"Registrar la falsa alarma con hora y causa, e informar al Controlador de Mantenimiento que se repite desde hace dos semanas para que revise el detector con una orden de trabajo.", q:"best", min:0,
+      fb:"El problema real es un detector que falla o una limpieza que lo afecta. Eso se resuelve con un reporte que muestre la repetición, no apagándolo.", rams:"Una falla repetida bien reportada entra al análisis FRACAS y se corrige de raíz.", ref:REG},
+     {t:"No registrarla: ya todos saben que ese detector falla.", q:"bad", min:0,
+      fb:"Lo que «todos saben» pero nadie registra no existe para mantenimiento. Por eso lleva dos semanas igual.", rams:"Si no está registrado, no existe para el análisis.", ref:REG},
+     {t:"Pedirle al técnico de turno que le baje la sensibilidad al detector esta misma noche.", q:"ok", min:0,
+      fb:"Suena razonable, pero cambiar la sensibilidad de un detector es un cambio de configuración. Debe pasar por el procedimiento de gestión de cambios, para que alguien evalúe si sigue detectando un incendio real.", rams:"Todo cambio, por pequeño que sea, pasa por gestión de cambios.", ref:"Procedimiento de gestión de cambios"}
+    ]},
+   {hora:"23:30", situ:"Revisando el sistema descubre que el detector del andén de la vía 2 de la misma estación está inhibido desde el turno anterior. No hay ningún registro de quién lo hizo ni por qué.",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Informar de inmediato al jefe de turno del CCO, registrar lo encontrado y pedir que se restablezca según el procedimiento.", q:"best", min:0,
+      fb:"Una protección desactivada sin registro es un peligro oculto. Lo primero es que el responsable lo sepa y quede trazado.", rams:"Reportar lo que se encuentra mal, aunque no lo haya hecho usted.", ref:REG},
+     {t:"Restablecerlo usted mismo sin decir nada, para no meter en problemas al compañero.", q:"ok", min:0,
+      fb:"La protección vuelve, pero nadie sabrá que estuvo desactivada ni por qué. Si es una práctica del grupo, volverá a pasar.", rams:"Reportar no es acusar: es corregir el sistema.", ref:REG},
+     {t:"Dejarlo así: si lo inhibieron, por algo habrá sido.", q:"bad", min:0, barrera:true,
+      fb:"Suponer que alguien tuvo una buena razón no reemplaza una autorización. Ese andén queda sin detección de incendio.", rams:"Una barrera desactivada no se da por buena sin verificar.", ref:REG}
+    ]},
+   {hora:"23:45", texto:"¿Qué tiene en común esta situación con el accidente de Clapham Junction (1988)?",
+    ops:[
+     {t:"Un cambio que parecía menor se hizo sin control ni verificación y anuló una protección que todos creían activa.", q:"best", min:0,
+      fb:"En Clapham Junction un cableado mal hecho en un trabajo de señalización no se detectó en las pruebas. Aquí, un detector inhibido sin registro.", rams:"El control de cambios existe para que ningún cambio anule una protección sin que nadie lo sepa.", ref:"Caso Clapham Junction"},
+     {t:"Nada: allá fue un problema de señalización y aquí es un detector de humo.", q:"bad", min:0,
+      fb:"El equipo es distinto, pero el mecanismo es el mismo: un cambio sin control.", rams:"Los accidentes se repiten por mecanismos, no por equipos.", ref:"Caso Clapham Junction"},
+     {t:"Que los dos fueron culpa de una sola persona descuidada.", q:"ok", min:0,
+      fb:"Buscar un culpable no evita el siguiente. Lo que falló fue que el sistema permitió un cambio sin verificación.", rams:"Se corrige el sistema, no solo a la persona.", ref:"Caso Clapham Junction"}
+    ]}
+  ],
+  reporte:{titulo:"Registro en el Registro Diario", emisor:"Controlador CCO", hora:"23:30",
+   ubicaciones:["Estación E02 – andén vía 1","Estación E02 – andén vía 2","Estación E03 – andén vía 2","Estación E02 – vestíbulo"], ubicacion:"Estación E02 – andén vía 2",
+   categorias:["Incidente – alarma de incendio","Novedad operativa","Incidente – alarma de fallo"], receptores:["Controlador de Mantenimiento"], canales:["Teléfono","Radio TETRA"],
+   claves:["detector","inhib","E02","humo","vía 2","via 2"]},
+  leccion:"Inhibir una alarma, cambiar una sensibilidad o mover un umbral son cambios. Por pequeños que parezcan, pasan por gestión de cambios. Una falsa alarma repetida se resuelve reportándola, no apagándola."
+ },
+
+ {id:"cot-ajuste", rol:"cot", titulo:"El ajuste inocente: el interfono con cinta",
+  resumen:"Al recibir el tren encuentra un interfono de emergencia tapado con cinta «porque suena solo».",
+  ref:REG,
+  contexto:"Inicio del turno. Usted recibe el Tren uno-cero-nueve (109) en relevo. El compañero que entrega el tren le comenta: «El interfono de emergencia del coche 2 suena solo. Le puse cinta para que no lo presionen; déjalo así».",
+  minBase:0,
+  pasos:[
+   {hora:"05:40", situ:"El interfono de emergencia para pasajeros del coche 2 está tapado con cinta.",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Informar al CCO antes de salir que el interfono de emergencia del coche 2 está bloqueado con cinta y que tiene una falla, y pedir instrucciones.", q:"best", min:1,
+      fb:"Un pasajero en emergencia en ese coche no tendría cómo pedir ayuda. El CCO debe saberlo y decidir.", rams:"Un dispositivo de emergencia bloqueado es una barrera anulada.", ref:REG},
+     {t:"Quitar la cinta sin decir nada a nadie.", q:"ok", min:0,
+      fb:"El interfono vuelve a estar disponible, pero la falla que lo hace sonar solo no queda reportada y el problema seguirá.", rams:"Resolver sin reportar deja la causa intacta.", ref:REG},
+     {t:"Dejarlo como está: el compañero ya lo resolvió.", q:"bad", min:0, barrera:true,
+      fb:"Tapar un interfono de emergencia no resuelve nada: quita a los pasajeros su forma de pedir ayuda.", rams:"Un cambio informal puede anular una protección.", ref:REG}
+    ]},
+   {hora:"05:45", radio:"CCO: \"Tren uno-cero-nueve, retire la cinta del interfono del coche dos. Se genera el aviso a mantenimiento. Confirme colación.\"",
+    texto:"Durante el recorrido el interfono del coche 2 se activa dos veces sin que nadie hable. ¿Qué hace?",
+    ops:[
+     {t:"Atender cada llamada como si fuera real, verificar y reportar al CCO cada activación con la hora y la estación.", q:"best", min:1,
+      fb:"Cada llamada puede ser la real. Y las horas de cada activación ayudan a mantenimiento a encontrar la causa.", rams:"Datos de cada evento: así se diagnostica una falla intermitente.", ref:REG},
+     {t:"Dejar de atender las llamadas de ese coche: ya se sabe que falla.", q:"bad", min:0, barrera:true,
+      fb:"Ignorar un dispositivo de emergencia equivale a desactivarlo. El día que la llamada sea real, nadie responderá.", rams:"Acostumbrarse a una alarma es una forma de anularla.", ref:REG},
+     {t:"Volver a poner la cinta para evitar más falsas llamadas.", q:"bad", min:0, barrera:true,
+      fb:"El CCO ordenó retirarla. Volver a bloquearlo es un cambio por cuenta propia sobre un dispositivo de emergencia.", rams:"Ningún cambio se hace por cuenta propia.", ref:REG}
+    ]},
+   {hora:"12:10", situ:"Al final de su recorrido, en el patio, un técnico le dice: «Yo le bajo la sensibilidad desde la consola y listo, así no molesta más. No hace falta papeleo».",
+    texto:"¿Qué responde?",
+    ops:[
+     {t:"Que eso es un cambio y debe hacerse con orden de trabajo y por el procedimiento de gestión de cambios; usted deja la falla reportada al CCO y al Capitán de Trenes.", q:"best", min:0,
+      fb:"Cambiar la sensibilidad puede hacer que el interfono no funcione cuando un pasajero lo necesita. Alguien tiene que evaluarlo y dejarlo registrado.", rams:"Un cambio sin control puede crear una falla nueva.", ref:"Procedimiento de gestión de cambios"},
+     {t:"Que lo haga, si es rápido y él sabe lo que hace.", q:"bad", min:0, barrera:true,
+      fb:"Saber hacerlo no es lo mismo que estar autorizado. Si el cambio no queda registrado, el siguiente técnico no sabrá por qué el interfono se comporta distinto.", rams:"Todo cambio queda registrado y verificado.", ref:"Procedimiento de gestión de cambios"},
+     {t:"Que no es su problema: usted ya entregó el tren.", q:"ok", min:0,
+      fb:"No le toca hacer el cambio, pero sí reportar lo que vio. Una palabra a tiempo evita un cambio informal.", rams:"La seguridad es responsabilidad de todos los roles.", ref:REG}
+    ]},
+   {hora:"12:20", texto:"¿Qué tiene en común esta situación con el accidente de Clapham Junction (1988)?",
+    ops:[
+     {t:"Un cambio que parecía menor se hizo sin control ni verificación y anuló una protección que todos creían activa.", q:"best", min:0,
+      fb:"En Clapham Junction un cableado mal hecho en un trabajo de señalización no se detectó en las pruebas. Aquí, un interfono tapado y un ajuste sin registro.", rams:"El control de cambios existe para que ningún cambio anule una protección sin que nadie lo sepa.", ref:"Caso Clapham Junction"},
+     {t:"Nada: allá fue la señalización y aquí es un interfono.", q:"bad", min:0,
+      fb:"El equipo es distinto, pero el mecanismo es el mismo: un cambio sin control.", rams:"Los accidentes se repiten por mecanismos, no por equipos.", ref:"Caso Clapham Junction"},
+     {t:"Que los dos fueron culpa de una sola persona descuidada.", q:"ok", min:0,
+      fb:"Buscar un culpable no evita el siguiente. Lo que falló fue que el sistema permitió un cambio sin verificación.", rams:"Se corrige el sistema, no solo a la persona.", ref:"Caso Clapham Junction"}
+    ]}
+  ],
+  reporte:{titulo:"Reporte de la novedad al CCO", emisor:"COT – Tren 109", hora:"05:40",
+   ubicaciones:["Patio-Taller","Tren 109 – coche 1","Tren 109 – coche 2","Estación E01 – vía 1"], ubicacion:"Tren 109 – coche 2",
+   categorias:["Incidente – alarma de fallo","Novedad operativa"], receptores:["CCO","Capitán de Trenes (CAP)"], canales:["Radio TETRA"],
+   claves:["interfono","cinta","109","coche"]},
+  leccion:"Tapar un dispositivo, ignorar sus llamadas o ajustarlo sin orden de trabajo son cambios que anulan una protección. Se reporta la falla y el cambio lo decide y registra quien corresponde."
+ },
+
+ {id:"aux-ajuste", rol:"aux", titulo:"El ajuste inocente: la puerta que estorba",
+  resumen:"En hora punta, un compañero amarra abierta una puerta cortafuego para que la gente pase más rápido.",
+  ref:REG,
+  contexto:"Hora punta de la tarde. Usted es Auxiliar de Estación (AUX) en la Estación E06. Entre el vestíbulo y las escaleras hay una puerta cortafuego que se cierra sola, y en hora punta hace más lento el paso de la gente.",
+  minBase:0,
+  pasos:[
+   {hora:"17:30", situ:"Su compañero amarra la puerta cortafuego abierta con una cuerda: «Así la gente pasa más rápido. Solo en hora punta».",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Pedirle que la suelte, explicarle que en un incendio esa puerta contiene el humo, y reportar al JET que la puerta dificulta el flujo para que se busque una solución autorizada.", q:"best", min:0,
+      fb:"La puerta cumple una función de seguridad. El problema del flujo es real, pero se resuelve con una solución evaluada, no con una cuerda.", rams:"Un cambio en la estación también es un cambio: pasa por gestión de cambios.", ref:"Procedimiento de gestión de cambios"},
+     {t:"Dejarla amarrada, pero avisar al JET.", q:"ok", min:0,
+      fb:"Avisar está bien, pero mientras tanto la estación queda sin esa protección contra el humo.", rams:"Primero se restablece la protección, después se discute la mejora.", ref:REG},
+     {t:"Dejarla así: es solo en hora punta y mejora el servicio.", q:"bad", min:0, barrera:true,
+      fb:"La hora punta es justo cuando más gente habría que proteger del humo en un incendio.", rams:"Ninguna mejora del flujo justifica anular una protección.", ref:REG}
+    ]},
+   {hora:"17:50", situ:"Un proveedor instala un exhibidor de publicidad justo delante del pulsador manual de alarma de incendio y del extintor del vestíbulo.",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Pedir que se retire el exhibidor de ese lugar e informar al JET para que se ubique donde no tape equipos de emergencia.", q:"best", min:0,
+      fb:"Los equipos de emergencia deben estar visibles y a mano. El exhibidor se reubica; el pulsador y el extintor no se mueven.", rams:"Tapar un equipo de emergencia es anularlo en la práctica.", ref:REG},
+     {t:"Mover usted el extintor a otra pared, donde se vea mejor.", q:"bad", min:0, barrera:true,
+      fb:"Parece una buena idea, pero mover un equipo de emergencia es un cambio: su ubicación está definida y señalizada, y el personal sabe dónde buscarlo.", rams:"Mover un equipo es un cambio y pasa por gestión de cambios.", ref:"Procedimiento de gestión de cambios"},
+     {t:"No decir nada: el exhibidor tiene permiso de la empresa.", q:"ok", min:0,
+      fb:"El permiso para instalar publicidad no incluye tapar equipos de emergencia. Alguien tiene que avisar.", rams:"Lo que usted ve, el JET no siempre lo ve.", ref:REG}
+    ]},
+   {hora:"18:30", situ:"Haciendo la ronda se da cuenta de que ayer usted mismo dejó una cuña bajo esa puerta cortafuego para mover unas cajas, y se le olvidó quitarla. Estuvo así toda la noche.",
+    texto:"¿Qué hace?",
+    ops:[
+     {t:"Quitar la cuña y reportarlo al JET: fue un error suyo y la puerta estuvo abierta desde ayer.", q:"best", min:0,
+      fb:"Reportar un error propio permite revisar por qué pasó (por ejemplo, que no haya un lugar para mover cajas sin bloquear puertas) y evita que le pase a otro.", rams:"Un cuasi-incidente reportado es una lección gratis.", ref:REG},
+     {t:"Quitar la cuña y no decir nada: no pasó nada.", q:"ok", min:0,
+      fb:"No pasó nada esta vez. Si no se reporta, nadie revisará por qué fue tan fácil dejar la puerta bloqueada.", rams:"Reportar sin miedo: el objetivo es corregir el sistema, no castigar.", ref:REG},
+     {t:"Dejarla: ya pasó la noche y no hubo problema.", q:"bad", min:0, barrera:true,
+      fb:"Que no haya pasado nada no significa que la protección no haga falta.", rams:"Una barrera anulada es un riesgo aunque hoy no haya pasado nada.", ref:REG}
+    ]},
+   {hora:"18:40", texto:"¿Qué tiene en común esta situación con el accidente de Clapham Junction (1988)?",
+    ops:[
+     {t:"Un cambio que parecía menor se hizo sin control ni verificación y anuló una protección que todos creían activa.", q:"best", min:0,
+      fb:"En Clapham Junction un cableado mal hecho en un trabajo de señalización no se detectó en las pruebas. Aquí, una puerta cortafuego amarrada y un extintor tapado.", rams:"El control de cambios existe para que ningún cambio anule una protección sin que nadie lo sepa.", ref:"Caso Clapham Junction"},
+     {t:"Nada: allá fue la señalización y aquí es una puerta.", q:"bad", min:0,
+      fb:"El equipo es distinto, pero el mecanismo es el mismo: un cambio sin control.", rams:"Los accidentes se repiten por mecanismos, no por equipos.", ref:"Caso Clapham Junction"},
+     {t:"Que los dos fueron culpa de una sola persona descuidada.", q:"ok", min:0,
+      fb:"Buscar un culpable no evita el siguiente. Lo que falló fue que el sistema permitió un cambio sin verificación.", rams:"Se corrige el sistema, no solo a la persona.", ref:"Caso Clapham Junction"}
+    ]}
+  ],
+  reporte:{titulo:"Registro de la novedad en el Registro Diario", emisor:"Auxiliar de estación (AUX) – Estación E06", hora:"17:30",
+   ubicaciones:["Estación E06 – vestíbulo","Estación E06 – andén vía 1","Estación E05 – vestíbulo","Estación E06 – acceso calle"], ubicacion:"Estación E06 – vestíbulo",
+   categorias:["Novedad operativa"], receptores:["Jefe de Estación de Turno (JET)"], canales:["Presencial","Radio TETRA"],
+   claves:["puerta","cortafuego","amarr","cuña","extintor","pulsador"]},
+  leccion:"Amarrar una puerta, tapar un equipo de emergencia o moverlo de lugar son cambios. Si algo estorba, se reporta y se busca una solución autorizada. Y si el error fue propio, también se reporta."
  }
 ];

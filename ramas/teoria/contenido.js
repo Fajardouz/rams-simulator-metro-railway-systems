@@ -158,6 +158,47 @@ var RAMA = {
          explicacion:"La mantenibilidad se refleja en el MTTR: cuanto más fácil y rápido sea restaurar el equipo, mejor."}
       ],
       leccion: "RAMS es un proceso que acompaña todo el ciclo de vida; no es un informe que se entrega una sola vez."
+    },
+
+    {
+      id: "quiz-sesion5",
+      tipo: "preguntas",
+      titulo: "Quiz de cierre · Sesión 5",
+      resumen: "Diez situaciones sobre el reporte, el circuito FRACAS y el control de cambios.",
+      instrucciones: "Elija la mejor respuesta. Cada pregunta tiene su explicación.",
+      preguntas: [
+        {p:"Una escalera se detiene sola y a los dos minutos arranca sola otra vez. ¿Qué hace?",
+         opciones:["No la reporta, porque ya funciona.","La reporta como falla, con la hora y lo que observó, aunque se haya recuperado.","La reporta solo si vuelve a pasar en el mismo día."],
+         correcta:1, explicacion:"Una falla que «se arregla sola» es una falla intermitente. Sin reportes, nadie puede ver que se repite."},
+        {p:"¿Cuál de estos datos NO es uno de los datos mínimos de un reporte?",
+         opciones:["Qué equipo y dónde está.","Cuánto afectó al servicio.","Cuál cree usted que es la causa de la falla."],
+         correcta:2, explicacion:"Los datos mínimos son: cuándo, dónde, qué equipo, qué pasó, qué se hizo y cuánto afectó. La causa la encuentra mantenimiento; una suposición puede desviar el análisis."},
+        {p:"Un pasajero le dice que olió a quemado antes de que la escalera se detuviera. Usted no huele nada. ¿Cómo lo reporta?",
+         opciones:["No lo menciona, porque usted no lo olió.","Lo reporta indicando que lo dijo un pasajero, y anota que usted no percibió olor.","Reporta que hubo olor a quemado."],
+         correcta:1, explicacion:"Se reporta lo que alguien dijo, diciendo quién lo dijo, y lo que usted observó. Mantenimiento decide qué peso darle."},
+        {p:"¿Qué es un cuasi-incidente?",
+         opciones:["Un evento que no causó daño, pero pudo causarlo.","Un incidente pequeño, con poco retraso.","Una falla que se recuperó sola."],
+         correcta:0, explicacion:"En un cuasi-incidente no pasó nada, pero pudo pasar. Reportarlo permite corregir la causa antes de que haya un herido o un daño."},
+        {p:"Usted cometió un error que se detectó a tiempo y no causó daño. ¿Qué hace?",
+         opciones:["No dice nada, porque no pasó nada.","Lo reporta según la política vigente, para que se corrija lo que facilitó el error.","Lo comenta solo con sus compañeros."],
+         correcta:1, explicacion:"El reporte de un error propio sirve para corregir el sistema, no para buscar culpables. Si a usted le pasó, le puede pasar a otro."},
+        {p:"¿En qué orden viaja un reporte?",
+         opciones:["Reporte → MMS → diagnóstico → análisis de la causa → corrección → verificación → cierre → mejora.","Reporte → corrección → cierre → análisis de la causa.","Reporte → cierre → mejora."],
+         correcta:0, explicacion:"Primero se repara, luego se busca por qué falló, se corrige, se verifica que funcionó y se cierra. La mejora cambia algo para que no vuelva a pasar."},
+        {p:"¿Por qué el registro de un evento también protege a la operación?",
+         opciones:["Porque sin registro no se puede demostrar qué pasó, cuánto duró ni por qué, cuando se revisa con la Interventoría.","Porque los registros nunca se revisan.","Porque así el evento no cuenta para los indicadores."],
+         correcta:0, explicacion:"El registro es la evidencia. Cada mes se revisa con la Interventoría qué eventos cuentan, y lo que no está registrado no se puede demostrar."},
+        {p:"Un compañero propone inhibir una alarma que «siempre suena por nada». ¿Qué es eso?",
+         opciones:["Una buena práctica para no distraer al CCO.","Un cambio, que debe pasar por el procedimiento de gestión de cambios.","Algo que se puede hacer si se avisa al final del turno."],
+         correcta:1, explicacion:"Inhibir una alarma, cambiar una sensibilidad o mover un equipo son cambios. Lo que se resuelve es la falsa alarma, reportándola."},
+        {p:"¿Cuál de estas acciones es un cambio que debe pasar por gestión de cambios?",
+         opciones:["Mover un extintor a otra pared donde se ve mejor.","Reportar una falla al JET.","Señalizar una escalera fuera de servicio según el procedimiento."],
+         correcta:0, explicacion:"La ubicación de un equipo de emergencia está definida y señalizada. Moverlo, aunque parezca una mejora, es un cambio."},
+        {p:"¿Qué enseña el accidente de Clapham Junction (1988)?",
+         opciones:["Que la señalización es peligrosa.","Que un cambio sin control ni verificación puede anular una protección que todos creen activa.","Que los accidentes los causa una sola persona."],
+         correcta:1, explicacion:"Un error de cableado en un trabajo de señalización no se detectó en las pruebas. El control de cambios existe para que ningún cambio anule una protección sin que nadie lo sepa."}
+      ],
+      leccion: "Un buen reporte evita que la falla se repita; un cambio sin control puede crear una nueva."
     }
 
   ]
